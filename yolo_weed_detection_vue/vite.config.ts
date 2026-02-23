@@ -15,8 +15,9 @@ const alias: Record<string, string> = {
   'vue-i18n': 'vue-i18n/dist/vue-i18n.cjs.js',
 };
 
-// 全局统一Flask局域网地址（保持HTTP）
-const FLASK_BASE_URL = 'http://192.168.0.101:5000';
+// 🔥 修正：Flask实际IP为192.168.0.102（原101），同时抽离SpringBoot地址便于维护
+const FLASK_BASE_URL = 'http://192.168.0.102:5000';
+const SPRINGBOOT_BASE_URL = 'http://192.168.0.102:9999'; // 假设SpringBoot与Flask同IP，若不同则修改
 
 const viteConfig = defineConfig((mode: ConfigEnv) => {
   const env = loadEnv(mode.mode, process.cwd());
@@ -28,7 +29,7 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
     ],
     root: process.cwd(),
     resolve: { alias },
-    base: mode.command === 'serve' ? './' : env.VITE_PUBLIC_PATH || './',
+    base: mode.command === 'serve' ? '/' : env.VITE_PUBLIC_PATH || './', // 修复开发环境base路径（原./可能导致路由404）
     optimizeDeps: {
       include: [
         'element-plus/lib/locale/lang/zh-cn',
@@ -43,15 +44,13 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
       hmr: true,
       https: true, // 启用HTTPS（前端）
       proxy: {
-        // 🔥 1. 核心：所有后端接口（/flask前缀）统一转发（优先级最高）
+        // 🔥 Flask代理（修正IP为102，保持原有规则）
         '/flask': {
           target: FLASK_BASE_URL,
           ws: true, // 支持WebSocket（视频进度推送、摄像头流）
           changeOrigin: true, // 跨域必备
           secure: false, // 允许目标为HTTP（Flask未启用HTTPS）
         },
-
-        // 🔥 2. 静态资源路径直接转发（后端已配置路由，无需rewrite）
         '/uploads': {
           target: FLASK_BASE_URL,
           changeOrigin: true,
@@ -67,16 +66,12 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
           changeOrigin: true,
           secure: false,
         },
-
-        // 🔥 3. WebSocket专用代理（视频处理进度、摄像头流）
         '/socket.io': {
           target: FLASK_BASE_URL,
           ws: true,
           changeOrigin: true,
           secure: false,
         },
-
-        // 🔥 4. 独立接口代理（兼容可能遗留的直接请求）
         '/stopCamera': {
           target: FLASK_BASE_URL,
           changeOrigin: true,
@@ -103,13 +98,27 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
           changeOrigin: true,
           secure: false,
         },
-
-        // 🔥 5. 简化/api代理（仅处理未迁移的旧请求，可选保留）
         '/api': {
           target: FLASK_BASE_URL,
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, '/flask'), // 旧/api请求自动转为/flask前缀
+        },
+
+        // 🔥 新增：SpringBoot服务代理（9999端口），按实际接口前缀调整
+        '/springboot': {
+          target: SPRINGBOOT_BASE_URL,
+          changeOrigin: true,
+          secure: false, // SpringBoot若未启用HTTPS则设为false
+          // 可选：若SpringBoot接口无统一前缀，可添加rewrite
+          // rewrite: (path) => path.replace(/^\/springboot/, ''),
+        },
+        // 若SpringBoot有特定接口前缀（如/api），补充代理
+        '/spring-api': {
+          target: SPRINGBOOT_BASE_URL,
+          changeOrigin: true,
+          secure: false,
+          rewrite: (path) => path.replace(/^\/spring-api/, '/api'),
         },
       },
     },

@@ -136,7 +136,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 全局网站标题 / 副标题
 			 */
 			// 网站主标题（菜单导航、浏览器当前网页标题）
-			globalTitle: '基于YOLOV11的杂草识别系统',
+			globalTitle: 'AAU',
 			// 网站副标题（登录页顶部文字）
 			globalViceTitle: 'AAU',
 			// 网站副标题（登录页顶部文字）
