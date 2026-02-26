@@ -182,40 +182,22 @@ const initSocketListener = () => {
 
 		// 关键修改3：修复视频结果监听，构建正确的视频URL
 		socketService.on('video_result', (data) => {
-			console.log('收到视频结果:', data);
 			let resultVideo = '';
-			
-			// 提取视频路径
 			if (typeof data === 'object') {
 				resultVideo = data.video_path || data.data || '';
 			} else {
 				resultVideo = data;
 			}
-			
 			if (resultVideo) {
-				// 构建完整的视频URL - 关键修复
+				// 只用相对路径，避免拼接 http://192.168.0.101:5000
 				let videoUrl = resultVideo;
-				
-				// 如果是相对路径，拼接Flask服务器的完整URL
-				if (videoUrl.startsWith('/')) {
-					// Flask服务器地址 - 根据你的实际配置调整
-					const flaskBaseUrl = 'http://192.168.0.101:5000';
-					videoUrl = `${flaskBaseUrl}${videoUrl}`;
-				}
-				
 				// 添加时间戳防止缓存
-				const url = new URL(videoUrl);
+				const url = new URL(videoUrl, window.location.origin);
 				url.searchParams.set('t', Date.now().toString());
-				
-				// 更新视频路径
 				state.video_path = url.toString();
 				videoLoadAttempts.value = 0;
-				
-				console.log('构建的视频URL:', state.video_path);
-				
 				// 强制触发视频播放器重新加载
 				isVideoActive.value = false;
-				
 				// 给视频一点时间加载
 				setTimeout(() => {
 					if (videoPlayer.value) {
@@ -223,7 +205,6 @@ const initSocketListener = () => {
 						videoPlayer.value.load();
 					}
 				}, 100);
-				
 				ElMessage.success('检测结果视频已生成，正在加载...');
 				statusMessage.value = '视频已生成，正在加载中...';
 				statusType.value = 'info';
