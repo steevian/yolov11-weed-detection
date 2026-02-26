@@ -103,7 +103,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 是否开启水印
 			isWartermark: true,
 			// 水印文案
-			wartermarkText: '林枫',
+			wartermarkText: 'AAU',
 
 			/**
 			 * 其它设置
@@ -135,11 +135,11 @@ export const useThemeConfig = defineStore('themeConfig', {
 			/**
 			 * 全局网站标题 / 副标题
 			 */
-			// 网站主标题（菜单导航、浏览器当前网页标题）
-			globalTitle: 'AAU',
-			// 网站副标题（登录页顶部文字）
-			globalViceTitle: 'AAU',
-			// 网站副标题（登录页顶部文字）
+			// 网站主标题（浏览器标签页、菜单导航标题）
+			globalTitle: '基于YOLOV11的杂草检测系统',
+			// 网站副标题（侧边栏Logo旁文字、登录页顶部文字）
+			globalViceTitle: '安徽农业大学',
+			// 网站副标题补充说明（登录页顶部辅助文字）
 			globalViceTitleMsg: '专注、免费、开源、维护、解疑',
 			// 默认初始语言，可选值"<zh-cn|en|zh-tw>"，默认 zh-cn
 			globalI18n: 'zh-cn',
