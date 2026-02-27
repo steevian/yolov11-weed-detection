@@ -67,7 +67,9 @@
 				</el-table-column>
 				<el-table-column prop="created_at" label="创建时间" width="180" align="center">
 					<template #default="{ row }">
-						{{ formatDateTime(row.created_at) }}
+					<!-- 强制显示，即使为空，帮助调试 -->
+					<span>{{ formatDateTime(row.created_at || row.createdAt) || '--' }}</span>
+					<span style="font-size:10px;color:#bbb;">[{{row.created_at}}|{{row.createdAt}}]</span>
 					</template>
 				</el-table-column>
 				<el-table-column label="操作" width="120" align="center" fixed="right">
@@ -197,59 +199,6 @@ const getVideoUrl = (videoPath: string) => {
 	return videoPath;
 };
 
-// 格式化日期时间
-// 在 index.vue 中，简单修复时间显示
-const formatDateTime = (dateStr: string) => {
-    if (!dateStr) return '';
-    
-    try {
-        // 简单修复：直接添加8小时（针对UTC时间存储的情况）
-        const date = new Date(dateStr);
-        
-        // 如果是UTC时间，添加8小时转换为中国时间
-        const adjustedDate = new Date(date.getTime() + (8 * 60 * 60 * 1000));
-        
-        // 或者使用更简单的方法：直接解析并格式化为本地时间
-        // 这种方法会使用浏览器的本地时区设置
-        return adjustedDate.toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        }).replace(/\//g, '-');
-    } catch (error) {
-        console.error('时间格式化错误:', error, '原始字符串:', dateStr);
-        return dateStr;
-    }
-};
-
-// 同时添加一个专门用于数据库时间的格式化函数
-const formatDatabaseDateTime = (dateStr: string) => {
-    if (!dateStr) return '';
-    
-    try {
-        // 处理数据库返回的时间格式
-        // 假设数据库返回的是 UTC 时间，需要转换为本地时间（UTC+8）
-        const utcDate = new Date(dateStr + 'Z'); // 添加Z表示UTC时间
-        const localDate = new Date(utcDate.getTime() + (8 * 60 * 60 * 1000)); // UTC+8
-        
-        return localDate.toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-        }).replace(/\//g, '-');
-    } catch (error) {
-        console.error('数据库时间格式化错误:', error, '原始字符串:', dateStr);
-        return dateStr;
-    }
-};
 
 // 格式化日期（仅日期部分）
 const formatDate = (dateStr: string) => {
@@ -263,11 +212,49 @@ const formatDate = (dateStr: string) => {
 	}
 };
 
-// 获取置信度标签类型
+// ----- 新增通用时间格式化函数 -----
+// 处理显示最近时间、昨天和日期+时间的逻辑
+const formatDateTime = (dateString: string) => {
+	if (!dateString) return '--';
+	try {
+		const date = new Date(dateString);
+		if (isNaN(date.getTime())) {
+			return dateString || '--';
+		}
+		const now = new Date();
+		const diffTime = Math.abs(now.getTime() - date.getTime());
+		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+		if (diffDays === 0) {
+			return date.toLocaleTimeString('zh-CN', {
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit'
+			});
+		}
+		if (diffDays === 1) {
+			return '昨天 ' + date.toLocaleTimeString('zh-CN', {
+				hour: '2-digit',
+				minute: '2-digit'
+			});
+		}
+		return date.toLocaleDateString('zh-CN', {
+			month: '2-digit',
+			day: '2-digit'
+		}) + ' ' + date.toLocaleTimeString('zh-CN', {
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	} catch (error) {
+		console.error('formatDateTime error', error);
+		return dateString || '--';
+	}
+};
+
+// 根据置信度返回标签样式
 const getConfTagType = (conf: number) => {
-	if (conf >= 0.8) return 'success';
-	if (conf >= 0.5) return 'warning';
-	return 'danger';
+    if (conf >= 0.8) return 'success';
+    if (conf >= 0.5) return 'warning';
+    return 'danger';
 };
 
 // 获取表格数据
@@ -303,39 +290,30 @@ const getTableData = () => {
 	request.get('/flask/camera_records', { params })
 		.then((res) => {
 			console.log('获取摄像头记录响应:', res);
-			
 			if (res.status === 200 || res.code === 200) {
 				const data = res.data || res;
-				
-				state.tableData.data = [];
 				state.tableData.total = data.total || 0;
-				
-				// 处理每一条记录
+				// 修复：正确填充表格数据，兼容字段
 				if (data.records && Array.isArray(data.records)) {
-					data.records.forEach((record: any, index: number) => {
-						const recordData = {
-							id: record.id,
-							num: (state.tableData.param.pageNum - 1) * state.tableData.param.pageSize + index + 1,
-							out_video: record.out_video || record.outVideo,
-							conf: record.conf || 0.5,
-							username: record.username,
-							start_time: record.start_time || record.startTime,
-							created_at: record.created_at,
-						};
-						
-						state.tableData.data.push(recordData);
-					});
+					state.tableData.data = data.records.map((record: any, idx: number) => ({
+						...record,
+						num: idx + 1 + (state.tableData.param.pageNum - 1) * state.tableData.param.pageSize,
+						created_at: record.created_at || record.createdAt,
+						start_time: record.start_time || record.startTime,
+						out_video: record.out_video || record.outVideo,
+						username: record.username,
+						conf: record.conf,
+					}));
+				} else {
+					state.tableData.data = [];
 				}
-				
-				// 更新统计信息
 				updateStats();
-				
-				// 更新唯一标识符
 				uniqueKey.value++;
-				
 				ElMessage.success(`获取到 ${state.tableData.data.length} 条记录`);
 			} else {
-				ElMessage.error(data.message || '获取记录失败');
+				state.tableData.data = [];
+				state.tableData.total = 0;
+				ElMessage.error((res && res.data && res.data.message) || res.message || '获取记录失败');
 			}
 		})
 		.catch((error) => {

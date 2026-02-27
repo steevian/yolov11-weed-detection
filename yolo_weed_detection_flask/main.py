@@ -67,6 +67,8 @@ class DatabaseManager:
                 created_at DATETIME DEFAULT (datetime('now', 'localtime'))  -- 自动使用本地时间
             )
         ''')
+        # 修复历史数据：若旧记录created_at为空，则补上当前本地时间
+        cursor.execute("UPDATE camera_records SET created_at = datetime('now','localtime') WHERE created_at IS NULL")
         
         conn.commit()
         conn.close()
@@ -127,6 +129,8 @@ class DatabaseManager:
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        # 修复历史video_records缺失created_at的记录
+        cursor.execute("UPDATE video_records SET created_at = datetime('now','localtime') WHERE created_at IS NULL")
         
         # 摄像头检测记录表
         cursor.execute('''
@@ -314,7 +318,7 @@ class DatabaseManager:
             conn.close()
     
     def get_video_records(self, page=1, page_size=10, username=None):
-        """获取视频检测记录（分页）"""
+        """获取视频检测记录（分页），并返回createdAt字段"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -344,7 +348,13 @@ class DatabaseManager:
         '''
         cursor.execute(query, params + [page_size, offset])
         
-        records = [dict(row) for row in cursor.fetchall()]
+        records = []
+        for row in cursor.fetchall():
+            item = dict(row)
+            # 如果 created_at 为空，则填充当前时间
+            if not item.get('created_at'):
+                item['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            records.append(item)
         conn.close()
         
         return {
@@ -448,6 +458,9 @@ class DatabaseManager:
             item = {}
             for key in row.keys():
                 item[to_camel(key)] = row[key]
+            # 若createdAt缺失，补上startTime或当前时间
+            if not item.get('createdAt'):
+                item['createdAt'] = item.get('startTime') or get_now_str()
             records.append(item)
         conn.close()
         

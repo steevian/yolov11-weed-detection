@@ -90,9 +90,10 @@
 				</el-table-column>
 				<el-table-column prop="created_at" label="创建时间" width="180" align="center">
 					<template #default="{ row }">
-						<el-tooltip :content="row.created_at" placement="top">
-							<span>{{ formatDate(row.created_at) }}</span>
-						</el-tooltip>
+				<!-- 格式化显示，并强制显示占位符 -->
+				<span>{{ formatDateTime(row.created_at || row.createdAt) || '--' }}</span>
+					<!-- 调试标记 -->
+					<span style="font-size:10px;color:#bbb;">[{{row.created_at}}|{{row.createdAt}}]</span>
 					</template>
 				</el-table-column>
 				<el-table-column label="操作" width="180" align="center" fixed="right">
@@ -226,6 +227,7 @@ const getVideoUrl = (videoPath: string): string => {
   // 4. 默认添加基础路径
   return `http://${currentHost}:5000/${videoPath}`;
 };
+
 const getVideoPoster = (videoPath: string) => {
 	// 这里可以替换为实际的封面图生成逻辑
 	// 暂时返回空，浏览器会自动生成
@@ -234,10 +236,14 @@ const getVideoPoster = (videoPath: string) => {
 
 // 格式化日期
 const formatDate = (dateString: string) => {
-	if (!dateString) return '';
+	if (!dateString) return '--';
 	
 	try {
 		const date = new Date(dateString);
+		if (isNaN(date.getTime())) {
+			// 解析失败，返回原始字符串
+			return dateString || '--';
+		}
 		const now = new Date();
 		const diffTime = Math.abs(now.getTime() - date.getTime());
 		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -269,10 +275,46 @@ const formatDate = (dateString: string) => {
 		});
 	} catch (error) {
 		console.error('日期格式化失败:', error);
-		return dateString;
+		return dateString || '--';
 	}
 };
 
+// 通用格式化日期时间（和 cameraRecord 共用逻辑）
+const formatDateTime = (dateString: string) => {
+	if (!dateString) return '--';
+	try {
+		const date = new Date(dateString);
+		if (isNaN(date.getTime())) {
+			return dateString || '--';
+		}
+		const now = new Date();
+		const diffTime = Math.abs(now.getTime() - date.getTime());
+		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+		if (diffDays === 0) {
+			return date.toLocaleTimeString('zh-CN', {
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit'
+			});
+		}
+		if (diffDays === 1) {
+			return '昨天 ' + date.toLocaleTimeString('zh-CN', {
+				hour: '2-digit',
+				minute: '2-digit'
+			});
+		}
+		return date.toLocaleDateString('zh-CN', {
+			month: '2-digit',
+			day: '2-digit'
+		}) + ' ' + date.toLocaleTimeString('zh-CN', {
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	} catch (error) {
+		console.error('日期格式化失败:', error);
+		return dateString || '--';
+	}
+};
 // 获取置信度标签类型
 const getConfTagType = (conf: number) => {
 	if (conf >= 0.7) return 'danger';     // 高阈值：红色
@@ -334,9 +376,9 @@ const getTableData = () => {
 	request.get('/flask/video_records', { params })
 		.then((res) => {
 			console.log('获取视频记录响应:', res);
+			const data = res.data || res;
 			
 			if (res.status === 200 || res.code === 200) {
-				const data = res.data || res;
 				
 				state.tableData.data = [];
 				state.tableData.total = data.total || 0;
@@ -344,6 +386,10 @@ const getTableData = () => {
 				// 处理每一条记录
 				if (data.records && Array.isArray(data.records)) {
 					data.records.forEach((record: any, index: number) => {
+						// 计算创建时间值并打印调试
+						const createdVal = record.created_at ?? record.createdAt ?? '';
+						console.log('video record raw', record, 'mapped created_at', createdVal);
+						// 修复：先声明recordData变量，再赋值
 						const recordData = {
 							id: record.id,
 							num: (state.tableData.param.pageNum - 1) * state.tableData.param.pageSize + index + 1,
@@ -352,9 +398,9 @@ const getTableData = () => {
 							conf: record.conf || 0.5,
 							start_time: record.start_time || record.startTime,
 							username: record.username,
-							created_at: record.created_at || record.createdAt,
-						};
-						
+							created_at: createdVal,
+						}; // 修复：闭合recordData对象的大括号
+						// 修复：push语句移到对象外部
 						state.tableData.data.push(recordData);
 					});
 				}
