@@ -15,8 +15,16 @@ import numpy as np
 import sqlite3
 import uuid
 import shutil
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from flask import Flask, Response, request, jsonify, send_from_directory
+
+# helper: get current time string in East‑8 zone
+
+def get_now_str() -> str:
+    """返回东八区当前时间字符串，格式 YYYY-MM-DD HH:MM:SS"""
+    # 使用本地时间机房如需UTC+8手动调整
+    now = datetime.now(timezone(timedelta(hours=8)))
+    return now.strftime("%Y-%m-%d %H:%M:%S")
 from ultralytics import YOLO
 from flask_socketio import SocketIO, emit
 import jwt
@@ -360,17 +368,20 @@ class DatabaseManager:
         return affected > 0
     
     def add_camera_record(self, data):
-        """添加摄像头检测记录 - 修复路径版本"""
+        """添加摄像头检测记录 - 后端统一生成时间"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
         try:
             # 转换路径为相对路径
             out_video = self.convert_to_relative_path(data.get('outVideo', ''))
+            # 由后端生成标准时间
+            start_time = get_now_str()
             
             # 调试信息
             print(f"📊 保存摄像头记录:")
             print(f"  - outVideo: {out_video}")
+            print(f"  - start_time: {start_time}")
             
             cursor.execute('''
                 INSERT INTO camera_records 
@@ -380,7 +391,7 @@ class DatabaseManager:
                 data.get('username', ''),
                 out_video,
                 data.get('conf', 0.5),
-                data.get('startTime', '')
+                start_time
             ))
             
             conn.commit()
@@ -398,7 +409,7 @@ class DatabaseManager:
             conn.close()
     
     def get_camera_records(self, page=1, page_size=10, username=None):
-        """获取摄像头检测记录（分页）"""
+        """获取摄像头检测记录（分页），返回字段已转驼峰"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -428,7 +439,16 @@ class DatabaseManager:
         '''
         cursor.execute(query, params + [page_size, offset])
         
-        records = [dict(row) for row in cursor.fetchall()]
+        def to_camel(s: str) -> str:
+            parts = s.split('_')
+            return parts[0] + ''.join(p.title() for p in parts[1:])
+        
+        records = []
+        for row in cursor.fetchall():
+            item = {}
+            for key in row.keys():
+                item[to_camel(key)] = row[key]
+            records.append(item)
         conn.close()
         
         return {
@@ -1246,10 +1266,11 @@ class VideoProcessingApp:
     def predictVideo(self):
         """视频杂草检测流接口【核心修改：添加真实进度计算】"""
         self.data.clear()
+        # 后端生成开始时间，避免前端传参格式不规范
         self.data.update({
             "username": request.args.get('username', ''),
             "conf": float(request.args.get('conf', 0.5)),
-            "startTime": request.args.get('startTime', datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+            "startTime": get_now_str(),
             "inputVideo": request.args.get('inputVideo', '')
         })
         # 重置进度（关键）
@@ -1373,15 +1394,8 @@ class VideoProcessingApp:
             self.camera_data = {
                 "username": request.args.get('username', 'unknown'),
                 "conf": float(request.args.get('conf', 0.5)),
-                # 关键修复：使用格式化的本地时间字符串
+                # 关键修复：使用格式化的本地时间字符串，由后端生成
                 "startTime": local_time.strftime("%Y-%m-%d %H:%M:%S")
-            }
-            
-            # 保存用户参数到实例变量，以便后续使用
-            self.camera_data = {
-                "username": request.args.get('username', 'unknown'),
-                "conf": float(request.args.get('conf', 0.5)),
-                "startTime": request.args.get('startTime', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
             }
             
             # 生成唯一的视频文件名，避免冲突
@@ -1522,22 +1536,14 @@ class VideoProcessingApp:
             # 构建访问URL
             result_url = f"/results/videos/{result_video_name}"
             
-            # 保存记录到数据库
-            if hasattr(self, 'camera_data'):
-                record_data = {
-                    "username": self.camera_data.get("username", "unknown"),
-                    "outVideo": result_url,
-                    "conf": self.camera_data.get("conf", 0.5),
-                    "startTime": self.camera_data.get("startTime", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                }
-            else:
-                # 如果 camera_data 不存在，使用默认值
-                record_data = {
-                    "username": "unknown",
-                    "outVideo": result_url,
-                    "conf": 0.5,
-                    "startTime": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
+            # 保存记录到数据库: 强制使用后端当前时间
+            now = get_now_str()
+            record_data = {
+                "username": self.camera_data.get("username", "unknown") if hasattr(self, 'camera_data') else "unknown",
+                "outVideo": result_url,
+                "conf": self.camera_data.get("conf", 0.5) if hasattr(self, 'camera_data') else 0.5,
+                "startTime": now
+            }
             
             print(f"📊 准备保存摄像头记录到数据库: {record_data}")
             
