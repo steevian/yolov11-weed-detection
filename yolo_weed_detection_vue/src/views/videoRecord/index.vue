@@ -90,10 +90,7 @@
 				</el-table-column>
 				<el-table-column prop="created_at" label="创建时间" width="180" align="center">
 					<template #default="{ row }">
-				<!-- 格式化显示，并强制显示占位符 -->
-				<span>{{ formatDateTime(row.created_at || row.createdAt) || '--' }}</span>
-					<!-- 调试标记 -->
-					<span style="font-size:10px;color:#bbb;">[{{row.created_at}}|{{row.createdAt}}]</span>
+						<span>{{ formatDateTime(row.created_at || row.createdAt) || '--' }}</span>
 					</template>
 				</el-table-column>
 				<el-table-column label="操作" width="180" align="center" fixed="right">
