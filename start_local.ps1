@@ -1,63 +1,97 @@
 param()
 
 $ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
+$backendProcess = $null
+$frontendProcess = $null
 
 try {
-	$rootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-	$backendDir = Join-Path $rootDir 'yolo_weed_detection_flask'
-	$frontendDir = Join-Path $rootDir 'yolo_weed_detection_vue'
+    $rootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    $backendDir = Join-Path $rootDir 'yolo_weed_detection_flask'
+    $frontendDir = Join-Path $rootDir 'yolo_weed_detection_vue'
 
-	$env:PORT = '8080'
-	$env:VITE_FLASK_BASE_URL = 'http://localhost:8080'
+    if (-not (Test-Path $backendDir)) {
+        throw "Backend directory not found: $backendDir"
+    }
 
-	Write-Host '============================================================'
-	Write-Host '[Local Dev] 正在启动项目...'
-	Write-Host "[Env] PORT=$($env:PORT)"
-	Write-Host "[Env] VITE_FLASK_BASE_URL=$($env:VITE_FLASK_BASE_URL)"
-	Write-Host "[Backend] $backendDir"
-	Write-Host "[Frontend] $frontendDir"
-	Write-Host '============================================================'
+    if (-not (Test-Path $frontendDir)) {
+        throw "Frontend directory not found: $frontendDir"
+    }
 
-	if (-not (Test-Path (Join-Path $backendDir 'main.py'))) {
-		throw "未找到后端入口: $backendDir\\main.py"
-	}
+    if (-not (Test-Path (Join-Path $backendDir 'main.py'))) {
+        throw "Backend entry not found: $(Join-Path $backendDir 'main.py')"
+    }
 
-	if (-not (Test-Path (Join-Path $frontendDir 'package.json'))) {
-		throw "未找到前端入口: $frontendDir\\package.json"
-	}
+    if (-not (Test-Path (Join-Path $frontendDir 'package.json'))) {
+        throw "Frontend entry not found: $(Join-Path $frontendDir 'package.json')"
+    }
 
-	$backendCmd = "Set-Location -LiteralPath '$backendDir'; `$env:PORT='$($env:PORT)'; python main.py"
-	$frontendCmd = "Set-Location -LiteralPath '$frontendDir'; `$env:VITE_FLASK_BASE_URL='$($env:VITE_FLASK_BASE_URL)'; npm run dev"
+    if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
+        throw "Command not found: python. Install Python and add it to PATH."
+    }
 
-	$backendProcess = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', $backendCmd) -PassThru
-	Start-Sleep -Seconds 2
-	$frontendProcess = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', $frontendCmd) -PassThru
+    if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
+        throw "Command not found: npm. Install Node.js and add npm to PATH."
+    }
 
-	Write-Host ''
-	Write-Host '=================== 访问地址 ==================='
-	Write-Host '后端 Flask: http://localhost:8080'
-	Write-Host '前端 Vue  : http://localhost:5173'
-	Write-Host '================================================'
-	Write-Host ''
-	Write-Host '按任意键停止本脚本启动的后端/前端进程...'
-	[void][System.Console]::ReadKey($true)
+    $env:PORT = '8080'
+    $env:VITE_FLASK_BASE_URL = 'http://localhost:8080'
 
-	foreach ($p in @($frontendProcess, $backendProcess)) {
-		if ($null -ne $p) {
-			try {
-				if (-not $p.HasExited) {
-					Stop-Process -Id $p.Id -Force -ErrorAction Stop
-					Write-Host "[Stop] 已停止进程 PID=$($p.Id)"
-				}
-			}
-			catch {
-				Write-Warning "停止进程失败 PID=$($p.Id): $($_.Exception.Message)"
-			}
-		}
-	}
+    Write-Host 'Starting backend...'
+    $backendCmd = "Set-Location -LiteralPath '$backendDir'; `$env:PORT='8080'; python main.py"
+    $backendProcess = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', $backendCmd) -PassThru
 
-	Write-Host '[Done] 已完成停止。'
+    if ($null -eq $backendProcess) {
+        throw 'Failed to start backend process.'
+    }
+
+    Write-Host 'Waiting 3 seconds before starting frontend...'
+    Start-Sleep -Seconds 3
+
+    Write-Host 'Starting frontend...'
+    $frontendCmd = "Set-Location -LiteralPath '$frontendDir'; `$env:VITE_FLASK_BASE_URL='http://localhost:8080'; npm run dev"
+    $frontendProcess = Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoExit', '-ExecutionPolicy', 'Bypass', '-Command', $frontendCmd) -PassThru
+
+    if ($null -eq $frontendProcess) {
+        throw 'Failed to start frontend process.'
+    }
+
+    Write-Host ''
+    Write-Host '=== Access URLs ==='
+    Write-Host 'Backend: http://192.168.0.102:8080'
+    Write-Host 'Frontend (HTTPS): https://192.168.0.102:5173/'
+    Write-Host '===================='
+    Write-Host 'Services are running. Press Ctrl+C to stop.'
+    Write-Host ''
+
+    while ($true) {
+        Start-Sleep -Seconds 1
+    }
 }
 catch {
-	Write-Error $_.Exception.Message
+    Write-Error $_.Exception.Message
+    Write-Host 'Troubleshooting:'
+    Write-Host '1) Check Python: python --version'
+    Write-Host '2) Check npm: npm -v'
+    Write-Host '3) Check directories and entry files'
+    exit 1
+}
+finally {
+    foreach ($proc in @($frontendProcess, $backendProcess)) {
+        if ($null -ne $proc) {
+            try {
+                if (-not $proc.HasExited) {
+                    Stop-Process -Id $proc.Id -Force -ErrorAction Stop
+                    Write-Host "Stopped process PID=$($proc.Id)"
+                }
+            }
+            catch {
+                Write-Warning "Failed to stop PID=$($proc.Id): $($_.Exception.Message)"
+            }
+        }
+    }
+
+    Write-Host 'Shutdown complete.'
 }
