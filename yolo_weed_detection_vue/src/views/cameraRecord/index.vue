@@ -131,7 +131,7 @@
 </template>
 
 <script setup lang="ts" name="systemRole">
-import { reactive, onMounted, ref, computed } from 'vue';
+import { reactive, onMounted, ref } from 'vue';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import { 
 	Search, 
@@ -177,9 +177,6 @@ const state = reactive({
 	},
 });
 
-// 获取当前主机地址
-const currentHost = computed(() => window.location.hostname);
-
 // 获取视频URL
 const getVideoUrl = (videoPath: string) => {
 	if (!videoPath) return '';
@@ -189,63 +186,62 @@ const getVideoUrl = (videoPath: string) => {
 		return videoPath;
 	}
 	
-	// 如果是相对路径，添加主机和端口
-	if (videoPath.startsWith('/')) {
-		return `http://${currentHost.value}:5000${videoPath}`;
+	// 历史绝对路径兼容处理
+	if (videoPath.includes(':/') || videoPath.includes(':\\')) {
+		const normalized = videoPath.replace(/\\/g, '/');
+		const uploadsIndex = normalized.indexOf('/uploads/');
+		const resultsIndex = normalized.indexOf('/results/');
+		const runsIndex = normalized.indexOf('/runs/');
+		if (uploadsIndex !== -1) return normalized.substring(uploadsIndex);
+		if (resultsIndex !== -1) return normalized.substring(resultsIndex);
+		if (runsIndex !== -1) return normalized.substring(runsIndex);
+		return `/${normalized}`;
 	}
-	
-	return videoPath;
+
+	// 如果是相对路径，直接返回
+	if (videoPath.startsWith('/')) {
+		return videoPath;
+	}
+
+	return `/${videoPath}`;
+};
+
+const parseUtcToDate = (value: string): Date | null => {
+	if (!value) return null;
+	const normalized = value.includes('T') ? value : value.replace(' ', 'T');
+	const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(normalized);
+	const date = new Date(hasTimezone ? normalized : `${normalized}Z`);
+	return isNaN(date.getTime()) ? null : date;
+};
+
+const formatChinaDateTime = (value: string) => {
+	const date = parseUtcToDate(value);
+	if (!date) return value || '--';
+	return new Intl.DateTimeFormat('zh-CN', {
+		timeZone: 'Asia/Shanghai',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		second: '2-digit',
+		hour12: false,
+	}).format(date).replace(/\//g, '-');
 };
 
 
 // 格式化日期（仅日期部分）
 const formatDate = (dateStr: string) => {
 	if (!dateStr) return '';
-	
-	try {
-		const date = new Date(dateStr);
-		return date.toLocaleDateString('zh-CN');
-	} catch (error) {
-		return dateStr;
-	}
+	const formatted = formatChinaDateTime(dateStr);
+	return formatted.split(' ')[0] || formatted;
 };
 
 // ----- 新增通用时间格式化函数 -----
 // 处理显示最近时间、昨天和日期+时间的逻辑
 const formatDateTime = (dateString: string) => {
 	if (!dateString) return '--';
-	try {
-		const date = new Date(dateString);
-		if (isNaN(date.getTime())) {
-			return dateString || '--';
-		}
-		const now = new Date();
-		const diffTime = Math.abs(now.getTime() - date.getTime());
-		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-		if (diffDays === 0) {
-			return date.toLocaleTimeString('zh-CN', {
-				hour: '2-digit',
-				minute: '2-digit',
-				second: '2-digit'
-			});
-		}
-		if (diffDays === 1) {
-			return '昨天 ' + date.toLocaleTimeString('zh-CN', {
-				hour: '2-digit',
-				minute: '2-digit'
-			});
-		}
-		return date.toLocaleDateString('zh-CN', {
-			month: '2-digit',
-			day: '2-digit'
-		}) + ' ' + date.toLocaleTimeString('zh-CN', {
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	} catch (error) {
-		console.error('formatDateTime error', error);
-		return dateString || '--';
-	}
+	return formatChinaDateTime(dateString);
 };
 
 // 根据置信度返回标签样式

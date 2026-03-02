@@ -15,16 +15,48 @@ import numpy as np
 import sqlite3
 import uuid
 import shutil
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from flask import Flask, Response, request, jsonify, send_from_directory
 
-# helper: get current time string in East‑8 zone
+# helper: get current UTC time string
 
 def get_now_str() -> str:
-    """返回东八区当前时间字符串，格式 YYYY-MM-DD HH:MM:SS"""
-    # 使用本地时间机房如需UTC+8手动调整
-    now = datetime.now(timezone(timedelta(hours=8)))
+    """返回UTC当前时间字符串，格式 YYYY-MM-DD HH:MM:SS"""
+    now = datetime.utcnow()
     return now.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def get_now_iso_z() -> str:
+    """返回UTC ISO时间字符串，带Z后缀"""
+    return datetime.utcnow().replace(microsecond=0).isoformat() + 'Z'
+
+
+def to_utc_iso_z(value) -> str:
+    """将输入时间规范化为UTC ISO时间字符串（带Z）"""
+    if value is None or value == '':
+        return get_now_iso_z()
+
+    if isinstance(value, datetime):
+        dt = value
+    else:
+        raw = str(value).strip()
+        try:
+            iso_raw = raw.replace(' ', 'T')
+            if iso_raw.endswith('Z'):
+                iso_raw = iso_raw[:-1] + '+00:00'
+            dt = datetime.fromisoformat(iso_raw)
+        except Exception:
+            try:
+                dt = datetime.strptime(raw[:19], "%Y-%m-%d %H:%M:%S")
+            except Exception:
+                return get_now_iso_z()
+
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+
+    return dt.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 from ultralytics import YOLO
 from flask_socketio import SocketIO, emit
 import jwt
@@ -47,31 +79,8 @@ class DatabaseManager:
         self.init_database()
         print(f"✅ 数据库管理器初始化完成: {self.db_path}")
     
-    # 在 DatabaseManager 类的 init_database 方法中添加时区支持
-    def init_database(self):
-        """初始化数据库表（带时区支持）"""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        # 🔥 设置数据库连接时区（SQLite本身不支持，但可以在应用层处理）
-        cursor.execute("PRAGMA foreign_keys = ON")
-        
-        # 🔥 创建带时区信息的时间戳字段
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS camera_records (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                out_video TEXT,
-                conf REAL,
-                start_time DATETIME NOT NULL,  -- 存储为UTC时间
-                created_at DATETIME DEFAULT (datetime('now', 'localtime'))  -- 自动使用本地时间
-            )
-        ''')
-        # 修复历史数据：若旧记录created_at为空，则补上当前本地时间
-        cursor.execute("UPDATE camera_records SET created_at = datetime('now','localtime') WHERE created_at IS NULL")
-        
-        conn.commit()
-        conn.close()
+    # init_database 方法被后续定义覆盖，已在后续统一处理所有表和时区设置
+
 
     def convert_to_relative_path(self, path):
         """将绝对路径转换为相对于BASE_DIR的相对路径"""
@@ -79,11 +88,20 @@ class DatabaseManager:
             return path
         
         try:
+            normalized = str(path).replace('\\', '/')
+            base_normalized = self.BASE_DIR.replace('\\', '/')
+
             # 如果是绝对路径且包含BASE_DIR，转换为相对路径
-            if os.path.isabs(path) and path.startswith(self.BASE_DIR):
+            if os.path.isabs(path) and normalized.startswith(base_normalized):
                 relative_path = os.path.relpath(path, self.BASE_DIR)
                 # 统一使用正斜杠
                 return '/' + relative_path.replace('\\', '/')
+
+            # 历史绝对路径兼容：提取项目资源相对路径
+            for marker in ('/uploads/', '/results/', '/runs/', '/weights/', '/files/'):
+                idx = normalized.lower().find(marker)
+                if idx != -1:
+                    return normalized[idx:]
             
             # 如果已经是相对路径（以/开头），直接返回
             if path.startswith('/'):
@@ -100,7 +118,7 @@ class DatabaseManager:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         
-        # 图片检测记录表
+        # 图片检测记录表（创建时间使用UTC）
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS img_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -113,11 +131,13 @@ class DatabaseManager:
                 conf REAL,
                 start_time DATETIME NOT NULL,
                 detections TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at DATETIME DEFAULT (datetime('now'))
             )
         ''')
+        # 修复历史img_records缺失created_at的记录
+        cursor.execute("UPDATE img_records SET created_at = datetime('now') WHERE created_at IS NULL")
         
-        # 视频检测记录表
+        # 视频检测记录表（创建时间使用UTC）
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS video_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,13 +146,13 @@ class DatabaseManager:
                 out_video TEXT,
                 conf REAL,
                 start_time DATETIME NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at DATETIME DEFAULT (datetime('now'))
             )
         ''')
         # 修复历史video_records缺失created_at的记录
-        cursor.execute("UPDATE video_records SET created_at = datetime('now','localtime') WHERE created_at IS NULL")
+        cursor.execute("UPDATE video_records SET created_at = datetime('now') WHERE created_at IS NULL")
         
-        # 摄像头检测记录表
+        # 摄像头检测记录表（创建时间使用UTC）
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS camera_records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -140,9 +160,11 @@ class DatabaseManager:
                 out_video TEXT,
                 conf REAL,
                 start_time DATETIME NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                created_at DATETIME DEFAULT (datetime('now'))
             )
         ''')
+        # 修复历史camera_records缺失created_at的记录
+        cursor.execute("UPDATE camera_records SET created_at = datetime('now') WHERE created_at IS NULL")
         
         conn.commit()
         conn.close()
@@ -185,7 +207,7 @@ class DatabaseManager:
                 confidence,
                 data.get('allTime', 0.0),
                 data.get('conf', 0.5),
-                data.get('startTime', ''),
+                to_utc_iso_z(data.get('startTime', '')),
                 json.dumps(data.get('detections', []), ensure_ascii=False) if data.get('detections') else ''
             ))
             
@@ -300,7 +322,7 @@ class DatabaseManager:
                 input_video,
                 out_video,
                 data.get('conf', 0.5),
-                data.get('startTime', '')
+                to_utc_iso_z(data.get('startTime', ''))
             ))
             
             conn.commit()
@@ -351,9 +373,14 @@ class DatabaseManager:
         records = []
         for row in cursor.fetchall():
             item = dict(row)
+            if item.get('start_time'):
+                item['start_time'] = to_utc_iso_z(item.get('start_time'))
+            else:
+                item['start_time'] = get_now_iso_z()
+            item['recognition_time'] = item['start_time']
             # 如果 created_at 为空，则填充当前时间
             if not item.get('created_at'):
-                item['created_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                item['created_at'] = get_now_str()
             records.append(item)
         conn.close()
         
@@ -386,7 +413,7 @@ class DatabaseManager:
             # 转换路径为相对路径
             out_video = self.convert_to_relative_path(data.get('outVideo', ''))
             # 由后端生成标准时间
-            start_time = get_now_str()
+            start_time = get_now_iso_z()
             
             # 调试信息
             print(f"📊 保存摄像头记录:")
@@ -486,15 +513,17 @@ class DatabaseManager:
 
 
 class VideoProcessingApp:
-    # 核心优化1：固定局域网IP为192.168.0.101，端口5000
-    def __init__(self, host='192.168.0.101', port=5000):
+    def __init__(self, host='0.0.0.0', port=None):
         self.app = Flask(__name__)
         # 全局开启跨域，解决前端跨域请求问题
         CORS(self.app, supports_credentials=True)
         # 核心优化2：去掉async_mode='gevent'，解决启动异步模式报错
         self.socketio = SocketIO(self.app, cors_allowed_origins="*", async_mode='threading')
         self.host = host
-        self.port = port
+        try:
+            self.port = int(port if port is not None else os.getenv('PORT', '8080'))
+        except (TypeError, ValueError):
+            self.port = 8080
         
         # 配置JSON响应确保中文正常显示
         self.app.config['JSON_AS_ASCII'] = False
@@ -515,8 +544,6 @@ class VideoProcessingApp:
         self.weights_root = os.path.join(self.BASE_DIR, "weights")
         self.weed_model_name = "weed_best.pt"
         self.weed_model_path = os.path.join(self.weights_root, self.weed_model_name)
-        self.system_font_path = "C:/Windows/Fonts/msyh.ttc"
-        
         # 提前加载杂草检测模型（强制加载本地模型，不存在直接报错）
         self.load_weed_model()
         
@@ -659,7 +686,7 @@ class VideoProcessingApp:
                 username = data.get('username', 'default_user')
                 input_video = data.get('inputVideo', '')
                 conf = float(data.get('conf', 0.5))
-                start_time = data.get('startTime', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                start_time = get_now_iso_z()
                 
                 # 验证参数
                 if not input_video:
@@ -888,24 +915,22 @@ class VideoProcessingApp:
             self.socketio.emit('message', {'data': f'视频处理失败: {str(e)}'})
             self.socketio.emit('progress', 100)
 
-    # 核心优化3：重写run方法，只显示127.0.0.1和192.168.0.101，隐藏0.0.0.0
     def run(self):
         """启动 Flask 应用"""
         print("="*60)
         print(f"🚀 杂草检测服务启动成功！")
         print(f"✅ 本地访问地址：http://127.0.0.1:{self.port}")
-        print(f"✅ 局域网访问地址：http://{self.host}:{self.port}")
+        print(f"✅ 服务监听地址：http://0.0.0.0:{self.port}")
         print(f"📌 加载模型路径：{self.weed_model_path}")
         print(f"📌 项目根目录：{self.BASE_DIR}")
         print("="*60)
-        # log_output=False 隐藏默认的0.0.0.0日志，host=0.0.0.0确保两个地址都能访问
         self.socketio.run(
             self.app, 
-            host='0.0.0.0',  # 底层保持0.0.0.0，确保本地+局域网都能访问
+            host='0.0.0.0',
             port=self.port, 
             allow_unsafe_werkzeug=True, 
             debug=False,
-            log_output=False  # 关键：关闭SocketIO默认日志，不显示0.0.0.0
+            log_output=False
         )
 
     # 基础测试接口
@@ -1028,7 +1053,7 @@ class VideoProcessingApp:
         return jsonify({
             "status": 200,
             "message": "Flask杂草检测服务运行正常",
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": get_now_str(),
             "model_loaded": os.path.exists(self.weed_model_path),
             "base_dir": self.BASE_DIR
         })
@@ -1067,13 +1092,10 @@ class VideoProcessingApp:
             # 路径处理（保持不变）
             # ==============================================
             img_path = self.data["inputImg"]
-            # 1. 处理Windows绝对路径
-            if img_path.startswith(('D:\\', 'd:\\')):
-                img_path = img_path.split('D:\\', 1)[-1].replace('\\', '/')
-                img_path = os.path.join(self.BASE_DIR, img_path)
-                print(f"📌 修正Windows绝对路径为: {img_path}")
+            # 1. 通用路径归一化（历史绝对路径 -> 相对路径）
+            img_path = self.db_manager.convert_to_relative_path(img_path)
             # 2. 处理/开头的相对路径
-            elif img_path.startswith('/'):
+            if isinstance(img_path, str) and img_path.startswith('/'):
                 img_path = os.path.join(self.BASE_DIR, img_path.lstrip('/'))
                 print(f"📌 修正/开头相对路径为: {img_path}")
             # 3. 统一替换斜杠
@@ -1115,14 +1137,14 @@ class VideoProcessingApp:
             # 关键修复：统一使用服务器时间对象，而不是字符串
             # ==============================================
             # 记录检测开始时间（datetime对象）
-            start_datetime = datetime.now()
+            start_datetime = datetime.utcnow()
         
             # 执行检测
             detections = self.direct_detection(img_abs_path)
             detection_count = len(detections)
         
             # 计算检测耗时（datetime对象相减）
-            end_datetime = datetime.now()
+            end_datetime = datetime.utcnow()
             all_time = (end_datetime - start_datetime).total_seconds()
         
             # 处理检测结果
@@ -1147,7 +1169,7 @@ class VideoProcessingApp:
             # 关键修复：保存检测记录时使用格式化的时间字符串
             # ==============================================
             # 格式化时间为标准字符串
-            formatted_start_time = start_datetime.strftime("%Y-%m-%d %H:%M:%S")
+            formatted_start_time = to_utc_iso_z(start_datetime)
         
             # 保存检测记录到数据库
             if detection_count > 0 or label_str != "未检测到杂草":
@@ -1283,7 +1305,7 @@ class VideoProcessingApp:
         self.data.update({
             "username": request.args.get('username', ''),
             "conf": float(request.args.get('conf', 0.5)),
-            "startTime": get_now_str(),
+            "startTime": get_now_iso_z(),
             "inputVideo": request.args.get('inputVideo', '')
         })
         # 重置进度（关键）
@@ -1396,19 +1418,11 @@ class VideoProcessingApp:
         
         try:
             self.camera_lock = True
-            # 关键修复：使用本地时间，并格式化为正确的字符串
-            from datetime import datetime, timezone, timedelta
-            
-            # 获取本地时间（东八区）
-            local_tz = timezone(timedelta(hours=8))
-            local_time = datetime.now(local_tz)
-            
             # 保存用户参数到实例变量，以便后续使用
             self.camera_data = {
                 "username": request.args.get('username', 'unknown'),
                 "conf": float(request.args.get('conf', 0.5)),
-                # 关键修复：使用格式化的本地时间字符串，由后端生成
-                "startTime": local_time.strftime("%Y-%m-%d %H:%M:%S")
+                "startTime": get_now_iso_z()
             }
             
             # 生成唯一的视频文件名，避免冲突
@@ -1550,7 +1564,7 @@ class VideoProcessingApp:
             result_url = f"/results/videos/{result_video_name}"
             
             # 保存记录到数据库: 强制使用后端当前时间
-            now = get_now_str()
+            now = get_now_iso_z()
             record_data = {
                 "username": self.camera_data.get("username", "unknown") if hasattr(self, 'camera_data') else "unknown",
                 "outVideo": result_url,

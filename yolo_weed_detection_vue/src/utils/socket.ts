@@ -4,8 +4,7 @@ export class SocketService {
   private socket: Socket;
 
   constructor() {
-    const currentHost = window.location.hostname;
-    this.socket = io(`http://${currentHost}:5000`, {
+    this.socket = io('/', {
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

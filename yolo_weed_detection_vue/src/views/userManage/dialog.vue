@@ -6,7 +6,7 @@
 					v-model="state.form.avatar"
 					ref="uploadFile"
 					class="avatar-uploader"
-					:action="`${flaskBaseUrl}/flask/upload`"
+					action="/flask/upload"
 					:show-file-list="false"
 					:on-success="handleAvatarSuccessone"
 				>
@@ -82,12 +82,15 @@ const emit = defineEmits(['refresh']);
 const imageUrl = ref('');
 const uploadFile = ref<UploadInstance>();
 
-// Flask服务基础URL
-const flaskBaseUrl = 'http://192.168.0.101:5000';
+const toAvatarUrl = (avatarPath?: string) => {
+	if (!avatarPath) return '';
+	if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) return avatarPath;
+	return avatarPath;
+};
 
 // 头像上传成功处理
 const handleAvatarSuccessone: UploadProps['onSuccess'] = (response) => {
-  imageUrl.value = `${flaskBaseUrl}${response.data}`;
+	imageUrl.value = toAvatarUrl(response.data);
   state.form.avatar = response.data;
 };
 
@@ -122,7 +125,7 @@ const openDialog = (type: 'add' | 'edit', row: RowRoleType = {}) => {
 		state.dialog.title = '修改信息';
 		state.dialog.submitTxt = '修 改';
 		// 拼接头像完整URL
-		imageUrl.value = `${flaskBaseUrl}${state.form.avatar || ''}`;
+		imageUrl.value = toAvatarUrl(state.form.avatar || '');
 	} else {
 		state.form = {};
 		state.dialog.title = '新增信息';

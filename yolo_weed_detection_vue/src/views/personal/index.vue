@@ -11,7 +11,7 @@
 									v-model="state.form.avatar"
 									ref="uploadFile"
 									class="avatar-uploader"
-									action="http://192.168.0.101:5000/flask/upload"
+									action="/flask/upload"
 									:show-file-list="false"
 									:on-success="handleAvatarSuccessone"
 								>
@@ -76,12 +76,15 @@ import { Plus } from '@element-plus/icons-vue';
 const imageUrl = ref('');
 const uploadFile = ref<UploadInstance>();
 
-// Flask服务基础URL（与后端一致）
-const flaskBaseUrl = 'http://192.168.0.101:5000';
+const toAvatarUrl = (avatarPath?: string) => {
+	if (!avatarPath) return '';
+	if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) return avatarPath;
+	return avatarPath;
+};
 
 // 头像上传成功后的处理
 const handleAvatarSuccessone: UploadProps['onSuccess'] = (response, uploadFile) => {
-  imageUrl.value = `${flaskBaseUrl}${response.data}`; // 拼接完整头像URL
+	imageUrl.value = toAvatarUrl(response.data);
   state.form.avatar = response.data; // 后端存储用相对路径
 };
 
@@ -107,7 +110,7 @@ const getTableData = () => {
         state.form['role'] = '其他用户';
       }
       // 拼接完整头像URL
-      imageUrl.value = `${flaskBaseUrl}${state.form.avatar}`;
+	imageUrl.value = toAvatarUrl(state.form.avatar);
     } else {
       ElMessage({
         type: 'error',

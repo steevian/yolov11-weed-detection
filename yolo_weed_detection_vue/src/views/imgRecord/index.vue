@@ -274,8 +274,8 @@ const getImageUrl = (path: string): string => {
     return normalized;
   }
   
-  // 情况2：包含Windows绝对路径
-  if (normalized.includes('D:/') || normalized.includes('d:/')) {
+	// 情况2：包含历史绝对路径
+	if (normalized.includes(':/')) {
     // 提取uploads/results之后的部分
     const uploadsIndex = normalized.indexOf('/uploads/');
     const resultsIndex = normalized.indexOf('/results/');
@@ -291,16 +291,7 @@ const getImageUrl = (path: string): string => {
       return normalized.substring(runsIndex);
     }
     
-    // 尝试提取项目名之后的部分
-    const projectIndex = normalized.indexOf('yolo_weedDetection_detection_flask/');
-    if (projectIndex !== -1) {
-      const relative = normalized.substring(projectIndex + 'yolo_weedDetection_detection_flask/'.length);
-      return `/${relative}`;
-    }
-    
-    // 最简方案：只保留文件名
-    const filename = normalized.split('/').pop() || '';
-    return `/uploads/images/${filename}`;
+		return `/${normalized}`;
   }
   
   // 情况3：以/uploads等开头的相对路径
@@ -354,34 +345,29 @@ const formatDateTime = (dateTime: string | Date): string => {
   if (!dateTime) return '未知时间';
   
   try {
-    let date: Date;
-    
-    if (typeof dateTime === 'string') {
-      // 移除所有修复逻辑，直接解析
-      date = new Date(dateTime);
-      
-      // 如果解析失败，尝试常见格式
-      if (isNaN(date.getTime())) {
-        // 尝试解析ISO格式
-        date = new Date(dateTime.replace(' ', 'T') + 'Z');
-      }
-    } else {
-      date = dateTime;
-    }
-    
+		let date: Date;
+		if (typeof dateTime === 'string') {
+			const normalized = dateTime.includes('T') ? dateTime : dateTime.replace(' ', 'T');
+			const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(normalized);
+			date = new Date(hasTimezone ? normalized : `${normalized}Z`);
+		} else {
+			date = dateTime;
+		}
+
     if (isNaN(date.getTime())) {
       return typeof dateTime === 'string' ? dateTime.substring(0, 19) : '无效时间';
     }
-    
-    // 格式化为统一格式
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+		return new Intl.DateTimeFormat('zh-CN', {
+			timeZone: 'Asia/Shanghai',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hour12: false,
+		}).format(date).replace(/\//g, '-');
   } catch (error) {
     console.error('格式化日期失败:', error, dateTime);
     return typeof dateTime === 'string' ? dateTime : '时间格式错误';

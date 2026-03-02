@@ -189,7 +189,7 @@ const initSocketListener = () => {
 				resultVideo = data;
 			}
 			if (resultVideo) {
-				// 只用相对路径，避免拼接 http://192.168.0.101:5000
+				// 只用相对路径，避免拼接固定主机地址
 				let videoUrl = resultVideo;
 				// 添加时间戳防止缓存
 				const url = new URL(videoUrl, window.location.origin);
@@ -540,7 +540,7 @@ onMounted(async () => {
 	if (isConnected) {
 		console.log('Flask检测服务准备就绪');
 	} else {
-		ElMessage.warning('请确保Flask服务正在运行 (端口5000)');
+		ElMessage.warning('请确保Flask服务正在运行');
 	}
 	
 	// 开发环境下显示调试面板

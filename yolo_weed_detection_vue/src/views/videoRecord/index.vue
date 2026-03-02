@@ -83,8 +83,8 @@
 				</el-table-column>
 				<el-table-column prop="start_time" label="识别时间" width="180" align="center">
 					<template #default="{ row }">
-						<el-tooltip :content="row.start_time" placement="top">
-							<span>{{ formatDate(row.start_time) }}</span>
+						<el-tooltip :content="row.recognition_time || row.start_time" placement="top">
+							<span>{{ formatDate(row.recognition_time || row.start_time) }}</span>
 						</el-tooltip>
 					</template>
 				</el-table-column>
@@ -140,7 +140,7 @@
 </template>
 
 <script setup lang="ts" name="videoRecord">
-import { reactive, ref, onMounted, computed, nextTick } from 'vue';
+import { reactive, ref, onMounted, nextTick } from 'vue';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import { Search, Refresh, VideoCamera } from '@element-plus/icons-vue';
 import request from '/@/utils/request';
@@ -159,9 +159,6 @@ const { userInfos } = storeToRefs(stores);
 const uniqueKey = ref(0);
 const statusMessage = ref('');
 const statusType = ref('info');
-
-// 自动获取当前页面IP，解决跨域问题
-const currentHost = window.location.hostname;
 
 // 表格数据
 const state = reactive({
@@ -191,7 +188,7 @@ const getVideoUrl = (videoPath: string): string => {
   }
   
   // 2. 处理Windows绝对路径
-  if (videoPath.includes('D:/') || videoPath.includes('d:/') || videoPath.includes('D:\\') || videoPath.includes('d:\\')) {
+	if (videoPath.includes(':/') || videoPath.includes(':\\')) {
     // 提取uploads/results之后的部分
     const normalized = videoPath.replace(/\\/g, '/');
     
@@ -200,29 +197,49 @@ const getVideoUrl = (videoPath: string): string => {
     const runsIndex = normalized.indexOf('/runs/');
     
     if (uploadsIndex !== -1) {
-      const relativePath = normalized.substring(uploadsIndex);
-      return `http://${currentHost}:5000${relativePath}`;
+			return normalized.substring(uploadsIndex);
     }
     if (resultsIndex !== -1) {
-      const relativePath = normalized.substring(resultsIndex);
-      return `http://${currentHost}:5000${relativePath}`;
+			return normalized.substring(resultsIndex);
     }
     if (runsIndex !== -1) {
-      const relativePath = normalized.substring(runsIndex);
-      return `http://${currentHost}:5000${relativePath}`;
+			return normalized.substring(runsIndex);
     }
     
     // 尝试直接返回，让代理处理
-    return `http://${currentHost}:5000/${normalized}`;
+		return `/${normalized}`;
   }
   
   // 3. 处理相对路径
   if (videoPath.startsWith('/')) {
-    return `http://${currentHost}:5000${videoPath}`;
+		return videoPath;
   }
   
   // 4. 默认添加基础路径
-  return `http://${currentHost}:5000/${videoPath}`;
+	return `/${videoPath}`;
+};
+
+const parseUtcToDate = (value: string): Date | null => {
+	if (!value) return null;
+	const normalized = value.includes('T') ? value : value.replace(' ', 'T');
+	const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(normalized);
+	const date = new Date(hasTimezone ? normalized : `${normalized}Z`);
+	return isNaN(date.getTime()) ? null : date;
+};
+
+const formatChinaDateTime = (value: string, withSeconds = true) => {
+	const date = parseUtcToDate(value);
+	if (!date) return value || '--';
+	return new Intl.DateTimeFormat('zh-CN', {
+		timeZone: 'Asia/Shanghai',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+		hour: '2-digit',
+		minute: '2-digit',
+		second: withSeconds ? '2-digit' : undefined,
+		hour12: false,
+	}).format(date).replace(/\//g, '-');
 };
 
 const getVideoPoster = (videoPath: string) => {
@@ -234,83 +251,13 @@ const getVideoPoster = (videoPath: string) => {
 // 格式化日期
 const formatDate = (dateString: string) => {
 	if (!dateString) return '--';
-	
-	try {
-		const date = new Date(dateString);
-		if (isNaN(date.getTime())) {
-			// 解析失败，返回原始字符串
-			return dateString || '--';
-		}
-		const now = new Date();
-		const diffTime = Math.abs(now.getTime() - date.getTime());
-		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-		
-		// 如果是今天，只显示时间
-		if (diffDays === 0) {
-			return date.toLocaleTimeString('zh-CN', { 
-				hour: '2-digit', 
-				minute: '2-digit',
-				second: '2-digit'
-			});
-		}
-		
-		// 如果是昨天
-		if (diffDays === 1) {
-			return '昨天 ' + date.toLocaleTimeString('zh-CN', { 
-				hour: '2-digit', 
-				minute: '2-digit'
-			});
-		}
-		
-		// 其他情况显示日期和时间
-		return date.toLocaleDateString('zh-CN', { 
-			month: '2-digit', 
-			day: '2-digit'
-		}) + ' ' + date.toLocaleTimeString('zh-CN', { 
-			hour: '2-digit', 
-			minute: '2-digit'
-		});
-	} catch (error) {
-		console.error('日期格式化失败:', error);
-		return dateString || '--';
-	}
+	return formatChinaDateTime(dateString, true);
 };
 
 // 通用格式化日期时间（和 cameraRecord 共用逻辑）
 const formatDateTime = (dateString: string) => {
 	if (!dateString) return '--';
-	try {
-		const date = new Date(dateString);
-		if (isNaN(date.getTime())) {
-			return dateString || '--';
-		}
-		const now = new Date();
-		const diffTime = Math.abs(now.getTime() - date.getTime());
-		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-		if (diffDays === 0) {
-			return date.toLocaleTimeString('zh-CN', {
-				hour: '2-digit',
-				minute: '2-digit',
-				second: '2-digit'
-			});
-		}
-		if (diffDays === 1) {
-			return '昨天 ' + date.toLocaleTimeString('zh-CN', {
-				hour: '2-digit',
-				minute: '2-digit'
-			});
-		}
-		return date.toLocaleDateString('zh-CN', {
-			month: '2-digit',
-			day: '2-digit'
-		}) + ' ' + date.toLocaleTimeString('zh-CN', {
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	} catch (error) {
-		console.error('日期格式化失败:', error);
-		return dateString || '--';
-	}
+	return formatChinaDateTime(dateString, true);
 };
 // 获取置信度标签类型
 const getConfTagType = (conf: number) => {
@@ -393,7 +340,8 @@ const getTableData = () => {
 							input_video: record.input_video || record.inputVideo,
 							out_video: record.out_video || record.outVideo,
 							conf: record.conf || 0.5,
-							start_time: record.start_time || record.startTime,
+							recognition_time: record.recognition_time || record.recognitionTime || record.start_time || record.startTime,
+							start_time: record.start_time || record.startTime || record.recognition_time || record.recognitionTime,
 							username: record.username,
 							created_at: createdVal,
 						}; // 修复：闭合recordData对象的大括号
@@ -484,8 +432,8 @@ const showVideoDetail = (row: any) => {
 		<div style="line-height: 1.8;">
 			<p><strong>用户：</strong>${row.username}</p>
 			<p><strong>置信度阈值：</strong>${(row.conf * 100).toFixed(0)}%</p>
-			<p><strong>检测时间：</strong>${row.start_time}</p>
-			<p><strong>创建时间：</strong>${row.created_at || '未知'}</p>
+			<p><strong>检测时间：</strong>${formatDateTime(row.recognition_time || row.start_time || '')}</p>
+			<p><strong>创建时间：</strong>${formatDateTime(row.created_at || row.createdAt || '')}</p>
 			<p><strong>原始视频：</strong>${row.input_video ? '✓ 已上传' : '✗ 无'}</p>
 			<p><strong>检测结果：</strong>${row.out_video ? '✓ 已生成' : '✗ 无'}</p>
 		</div>

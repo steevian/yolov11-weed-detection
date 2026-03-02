@@ -15,12 +15,10 @@ const alias: Record<string, string> = {
   'vue-i18n': 'vue-i18n/dist/vue-i18n.cjs.js',
 };
 
-// 🔥 修正：Flask实际IP为192.168.0.102（原101），同时抽离SpringBoot地址便于维护
-const FLASK_BASE_URL = 'http://192.168.0.102:5000';
-const SPRINGBOOT_BASE_URL = 'http://192.168.0.102:9999'; // 假设SpringBoot与Flask同IP，若不同则修改
-
 const viteConfig = defineConfig((mode: ConfigEnv) => {
   const env = loadEnv(mode.mode, process.cwd());
+  const flaskBaseUrl = env.VITE_FLASK_BASE_URL || 'http://127.0.0.1:8080';
+  const springBootBaseUrl = env.VITE_SPRINGBOOT_BASE_URL || 'http://127.0.0.1:9999';
   return {
     plugins: [
       vue(), 
@@ -44,70 +42,68 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
       hmr: true,
       https: true, // 启用HTTPS（前端）
       proxy: {
-        // 🔥 Flask代理（修正IP为102，保持原有规则）
         '/flask': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           ws: true, // 支持WebSocket（视频进度推送、摄像头流）
           changeOrigin: true, // 跨域必备
           secure: false, // 允许目标为HTTP（Flask未启用HTTPS）
         },
         '/uploads': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
         },
         '/results': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
         },
         '/runs': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
         },
         '/socket.io': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           ws: true,
           changeOrigin: true,
           secure: false,
         },
         '/stopCamera': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
         },
         '/upload': { // 兼容前端上传组件的action="/upload"
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
         },
         '/predict': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
           ws: true,
         },
         '/predictVideo': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
         },
         '/predictCamera': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
         },
         '/api': {
-          target: FLASK_BASE_URL,
+          target: flaskBaseUrl,
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, '/flask'), // 旧/api请求自动转为/flask前缀
         },
 
-        // 🔥 新增：SpringBoot服务代理（9999端口），按实际接口前缀调整
         '/springboot': {
-          target: SPRINGBOOT_BASE_URL,
+          target: springBootBaseUrl,
           changeOrigin: true,
           secure: false, // SpringBoot若未启用HTTPS则设为false
           // 可选：若SpringBoot接口无统一前缀，可添加rewrite
@@ -115,7 +111,7 @@ const viteConfig = defineConfig((mode: ConfigEnv) => {
         },
         // 若SpringBoot有特定接口前缀（如/api），补充代理
         '/spring-api': {
-          target: SPRINGBOOT_BASE_URL,
+          target: springBootBaseUrl,
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/spring-api/, '/api'),

@@ -27,7 +27,7 @@
 				<el-table-column prop="role" label="角色" show-overflow-tooltip align="center"></el-table-column>
 				<el-table-column prop="avatar" label="头像" align="center">
 					<template #default="scope">
-					  <img :src="`http://192.168.0.101:5000${scope.row.avatar || ''}`" width="70" height="70" />
+					  <img :src="scope.row.avatar || ''" width="70" height="70" />
 					</template>
 				</el-table-column>
 				<el-table-column label="操作" width="150">

@@ -1,5 +1,3 @@
-# D:\cyd\Desktop\yolo_web-main\yolo_weedDetection_detection_flask\user_manager.py
-
 import sqlite3
 import hashlib
 import json
@@ -12,7 +10,8 @@ import time
 
 class UserManager:
     def __init__(self, db_path='weed_detection.db'):
-        self.db_path = db_path
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.db_path = db_path if os.path.isabs(db_path) else os.path.join(base_dir, db_path)
         # 使用固定密钥，避免每次启动变化导致token失效
         self.secret_key = "my_very_long_and_secure_jwt_secret_key_1234567890_abcd"
         print(f"JWT 密钥已设置，长度: {len(self.secret_key)}")
@@ -106,7 +105,7 @@ class UserManager:
                 'tel': kwargs.get('tel', ''),
                 'avatar': kwargs.get('avatar', '/uploads/images/default_avatar.png'),
                 'role': kwargs.get('role', 'common'),
-                'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                'created_at': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             }
             
             columns = ', '.join(user_data.keys())
@@ -182,7 +181,7 @@ class UserManager:
             # 更新最后登录时间
             cursor.execute('''
                 UPDATE users SET last_login = ? WHERE id = ?
-            ''', (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), user_dict['id']))
+            ''', (datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"), user_dict['id']))
             conn.commit()
             
             # 生成JWT token
@@ -194,7 +193,7 @@ class UserManager:
                 'user_id': user_info['id'],
                 'username': user_info['username'],
                 'role': user_info['role'],
-                'exp': datetime.now() + timedelta(hours=24)  # 24小时过期
+                'exp': datetime.utcnow() + timedelta(hours=24)  # 24小时过期
             }
             
             token = jwt.encode(payload, self.secret_key, algorithm='HS256')
