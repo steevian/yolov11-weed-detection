@@ -48,7 +48,7 @@ export const useUserInfo = defineStore('userInfo', {
       const userInfos = {
         userName: realUserInfo.userName || realUserInfo.username, // 兼容后端的username/前端的userName
         role: realUserInfo.role, // 后端返回的common/admin
-        photo: realUserInfo.avatar || '/uploads/images/default_avatar.png', // 用后端默认头像
+        photo: realUserInfo.avatar || '/uploads/avatar/default_avatar.png', // 用后端默认头像
         time: new Date().getTime(),
         roles: [realUserInfo.role], // 前端roles是数组，适配路由meta.roles
         authBtnList: realUserInfo.role === 'admin' 

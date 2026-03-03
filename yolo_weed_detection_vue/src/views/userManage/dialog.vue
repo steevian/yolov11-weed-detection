@@ -6,7 +6,7 @@
 					v-model="state.form.avatar"
 					ref="uploadFile"
 					class="avatar-uploader"
-					action="/flask/upload"
+					action="/flask/upload/avatar"
 					:show-file-list="false"
 					:on-success="handleAvatarSuccessone"
 				>

@@ -11,7 +11,7 @@
 									v-model="state.form.avatar"
 									ref="uploadFile"
 									class="avatar-uploader"
-									action="/flask/upload"
+									action="/flask/upload/avatar"
 									:show-file-list="false"
 									:on-success="handleAvatarSuccessone"
 								>
@@ -32,7 +32,7 @@
 						</el-form-item>
 					</el-col>
 					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="姓名" style="color: #000">
+						<el-form-item label="姓名">
 							<el-input v-model="state.form.name" placeholder="请输入姓名" clearable></el-input>
 						</el-form-item>
 					</el-col>

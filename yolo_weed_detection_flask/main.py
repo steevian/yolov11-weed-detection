@@ -605,7 +605,7 @@ class VideoProcessingApp:
         """创建必要的目录（基于Flask项目根目录）"""
         directories = [
             'runs', 'runs/video', 'runs/images', 'weights',
-            'uploads', 'uploads/images', 'uploads/videos',
+            'uploads', 'uploads/avatar', 'uploads/detect', 'uploads/detect/images', 'uploads/detect/videos',
             'results', 'results/images', 'results/videos'
         ]
         
@@ -646,6 +646,7 @@ class VideoProcessingApp:
         
         # 文件上传接口
         self.app.add_url_rule('/flask/upload', 'upload_file', self.upload_file, methods=['POST'])
+        self.app.add_url_rule('/flask/upload/avatar', 'upload_avatar', self.upload_avatar, methods=['POST'])
         self.app.add_url_rule('/upload', 'upload', self.upload_file, methods=['POST'])  # 兼容原前端/upload请求
         self.app.add_url_rule('/files/upload', 'files_upload', self.upload_file, methods=['POST'])  # 兼容前端配置
         
@@ -974,7 +975,7 @@ class VideoProcessingApp:
         return jsonify({"code":0, "msg":"Flask杂草检测服务正常运行", "model_path":self.weed_model_path, "base_dir":self.BASE_DIR})
     
     def upload_file(self):
-        """文件上传接口"""
+        """检测文件上传接口（图片/视频）"""
         try:
             if 'file' not in request.files:
                 return jsonify({"status": 400, "message": "没有上传文件"}), 400
@@ -985,9 +986,9 @@ class VideoProcessingApp:
             
             # 根据文件类型决定保存目录
             if file.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp')):
-                save_dir = os.path.join(self.paths['uploads'], 'images')
+                save_dir = os.path.join(self.paths['uploads'], 'detect', 'images')
             elif file.filename.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
-                save_dir = os.path.join(self.paths['uploads'], 'videos')
+                save_dir = os.path.join(self.paths['uploads'], 'detect', 'videos')
             else:
                 return jsonify({"status": 400, "message": "不支持的文件类型，仅支持图片/视频"}), 400
             
@@ -1014,6 +1015,39 @@ class VideoProcessingApp:
         except Exception as e:
             return jsonify({"status": 500, "message": f"文件上传失败: {str(e)}"}), 500
 
+    def upload_avatar(self):
+        """头像上传接口（仅图片）"""
+        try:
+            if 'file' not in request.files:
+                return jsonify({"status": 400, "message": "没有上传文件"}), 400
+
+            file = request.files['file']
+            if file.filename == '':
+                return jsonify({"status": 400, "message": "没有选择文件"}), 400
+
+            if not file.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp')):
+                return jsonify({"status": 400, "message": "头像仅支持图片文件"}), 400
+
+            save_dir = os.path.join(self.paths['uploads'], 'avatar')
+            os.makedirs(save_dir, exist_ok=True)
+
+            file_ext = os.path.splitext(file.filename)[1]
+            unique_filename = f"{uuid.uuid4()}{file_ext}"
+            file_path = os.path.join(save_dir, unique_filename)
+            file.save(file_path)
+
+            relative_path = os.path.relpath(file_path, self.BASE_DIR).replace('\\', '/')
+            access_url = f"/{relative_path}"
+
+            return jsonify({
+                "status": 200,
+                "message": "头像上传成功",
+                "data": access_url
+            })
+
+        except Exception as e:
+            return jsonify({"status": 500, "message": f"头像上传失败: {str(e)}"}), 500
+
     def file_names(self):
         """模型列表接口"""
         try:
@@ -1029,7 +1063,7 @@ class VideoProcessingApp:
                 return jsonify({'error': '没有上传图片'}), 400
             
             file = request.files['image']
-            file_path = os.path.join(self.paths['uploads'], 'images/test_temp.jpg')
+            file_path = os.path.join(self.paths['uploads'], 'detect', 'images', 'test_temp.jpg')
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             file.save(file_path)
             
@@ -1139,7 +1173,7 @@ class VideoProcessingApp:
         
             # 处理网络图片URL
             if img_path.startswith(('http://', 'https://')):
-                local_path = self.download_file(img_path, os.path.join(self.paths['uploads'], 'images/'))
+                local_path = self.download_file(img_path, os.path.join(self.paths['uploads'], 'detect', 'images'))
                 if not local_path:
                     return jsonify({
                         "status": 400,
@@ -1349,7 +1383,7 @@ class VideoProcessingApp:
         # 下载前端传入的视频文件到项目内uploads
         video_path = self.data["inputVideo"]
         if video_path.startswith(('http://', 'https://')):
-            local_path = self.download_file(video_path, os.path.join(self.paths['uploads'], 'videos/'))
+            local_path = self.download_file(video_path, os.path.join(self.paths['uploads'], 'detect', 'videos'))
             if not local_path:
                 return Response("视频下载失败", status=400)
             video_path = local_path
@@ -1935,7 +1969,7 @@ class VideoProcessingApp:
                 sex=data.get('sex', ''),
                 email=data.get('email', ''),
                 tel=data.get('tel', ''),
-                avatar=data.get('avatar', '/uploads/images/default_avatar.png')
+                avatar=data.get('avatar', '/uploads/avatar/default_avatar.png')
             )
             return jsonify(result)
         
@@ -1961,7 +1995,7 @@ class VideoProcessingApp:
                 sex=data.get('sex', ''),
                 email=data.get('email', ''),
                 tel=data.get('tel', ''),
-                avatar=data.get('avatar', '/uploads/images/default_avatar.png'),
+                avatar=data.get('avatar', '/uploads/avatar/default_avatar.png'),
                 role=data.get('role', 'common')
             )
             return jsonify(result)

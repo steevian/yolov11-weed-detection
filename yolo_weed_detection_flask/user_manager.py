@@ -112,7 +112,7 @@ class UserManager:
                 'sex': kwargs.get('sex', ''),
                 'email': kwargs.get('email', ''),
                 'tel': kwargs.get('tel', ''),
-                'avatar': kwargs.get('avatar', '/uploads/images/default_avatar.png'),
+                'avatar': kwargs.get('avatar', '/uploads/avatar/default_avatar.png'),
                 'role': kwargs.get('role', 'common'),
                 'created_at': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             }
