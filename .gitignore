@@ -165,3 +165,6 @@ local_*.py
 yolo_cropDisease_detection_flask/weed1_env/
 # 忽略图片文件夹
 imgs/
+
+# 本地归档目录（仅本地保留，不上传GitHub）
+_legacy_archive/
