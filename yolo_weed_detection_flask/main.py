@@ -213,7 +213,7 @@ class DatabaseManager:
                 confidence,
                 data.get('allTime', 0.0),
                 data.get('conf', 0.5),
-                to_utc_iso_z(data.get('startTime', '')),
+                data.get('startTime', get_now_str()),
                 json.dumps(data.get('detections', []), ensure_ascii=False) if data.get('detections') else ''
             ))
             
@@ -604,7 +604,7 @@ class VideoProcessingApp:
     def create_directories(self):
         """创建必要的目录（基于Flask项目根目录）"""
         directories = [
-            'runs', 'runs/video', 'runs/images', 'weights',
+            'runs', 'runs/video', 'weights',
             'uploads', 'uploads/avatar', 'uploads/detect', 'uploads/detect/images', 'uploads/detect/videos',
             'results', 'results/images', 'results/videos'
         ]
@@ -727,7 +727,7 @@ class VideoProcessingApp:
                 # 处理视频路径
                 video_path = input_video
                 if video_path.startswith(('http://', 'https://')):
-                    local_path = self.download_file(video_path, os.path.join(self.paths['uploads'], 'videos/'))
+                    local_path = self.download_file(video_path, os.path.join(self.paths['uploads'], 'detect', 'videos'))
                     if not local_path:
                         emit('message', {'data': '网络视频下载失败，检测终止！'})
                         emit('progress', 100)
@@ -1205,15 +1205,15 @@ class VideoProcessingApp:
             # ==============================================
             # 关键修复：统一使用服务器时间对象，而不是字符串
             # ==============================================
-            # 记录检测开始时间（datetime对象）
-            start_datetime = datetime.utcnow()
+            # 记录检测开始时间（本地时间对象）
+            start_datetime = datetime.now()
         
             # 执行检测
             detections = self.direct_detection(img_abs_path)
             detection_count = len(detections)
         
             # 计算检测耗时（datetime对象相减）
-            end_datetime = datetime.utcnow()
+            end_datetime = datetime.now()
             all_time = (end_datetime - start_datetime).total_seconds()
         
             # 处理检测结果
@@ -1237,8 +1237,8 @@ class VideoProcessingApp:
             # ==============================================
             # 关键修复：保存检测记录时使用格式化的时间字符串
             # ==============================================
-            # 格式化时间为标准字符串
-            formatted_start_time = to_utc_iso_z(start_datetime)
+            # 格式化时间为本地时间字符串
+            formatted_start_time = start_datetime.strftime("%Y-%m-%d %H:%M:%S")
         
             # 保存检测记录到数据库
             if detection_count > 0 or label_str != "未检测到杂草":
