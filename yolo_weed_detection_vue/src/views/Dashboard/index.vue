@@ -1,6 +1,15 @@
 <template>
 	<div class="dashboard-container layout-padding">
 		<div class="dashboard-inner layout-padding-auto">
+			<section class="top-strip dashboard-card">
+				<div class="fake-search">Search...</div>
+				<div class="top-actions">
+					<span class="dot"></span>
+					<span class="dot"></span>
+					<span class="dot"></span>
+				</div>
+			</section>
+
 			<section class="hero-card dashboard-card">
 				<div class="hero-text">
 					<h2>YOLOv11 杂草检测工作台</h2>
@@ -19,22 +28,22 @@
 			</section>
 
 			<section class="stats-grid">
-				<article class="dashboard-card stat-item">
+				<article class="dashboard-card stat-item stat-purple">
 					<div class="stat-label">活跃用户</div>
 					<div class="stat-value">{{ stats.activeUsers }}</div>
 					<div class="stat-foot">系统用户总数</div>
 				</article>
-				<article class="dashboard-card stat-item">
+				<article class="dashboard-card stat-item stat-blue">
 					<div class="stat-label">检测总量</div>
 					<div class="stat-value">{{ stats.totalDetections }}</div>
 					<div class="stat-foot">图像 + 视频 + 摄像</div>
 				</article>
-				<article class="dashboard-card stat-item">
+				<article class="dashboard-card stat-item stat-yellow">
 					<div class="stat-label">图像检测记录</div>
 					<div class="stat-value">{{ stats.imageDetections }}</div>
 					<div class="stat-foot">累计记录数</div>
 				</article>
-				<article class="dashboard-card stat-item">
+				<article class="dashboard-card stat-item stat-dark">
 					<div class="stat-label">视频检测记录</div>
 					<div class="stat-value">{{ stats.videoDetections }}</div>
 					<div class="stat-foot">累计记录数</div>
@@ -163,33 +172,70 @@ onMounted(() => {
 .dashboard-inner {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
+	gap: 14px;
 }
 
 .dashboard-card {
-	border-radius: 16px;
-	border: 1px solid var(--el-border-color-light);
-	background: var(--el-bg-color);
-	box-shadow: 0 10px 28px rgba(17, 24, 39, 0.06);
+	border-radius: 18px;
+	border: 1px solid rgba(148, 163, 184, 0.22);
+	background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+	box-shadow: 0 14px 30px rgba(17, 24, 39, 0.08);
+}
+
+.top-strip {
+	height: 62px;
+	padding: 0 18px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.fake-search {
+	width: min(360px, 56%);
+	height: 40px;
+	border-radius: 20px;
+	background: #f2f4fb;
+	border: 1px solid #e1e5f2;
+	display: flex;
+	align-items: center;
+	padding: 0 14px;
+	color: #a1a9bc;
+	font-size: 13px;
+}
+
+.top-actions {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.dot {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	background: #f4f6fd;
+	border: 1px solid #e2e8f4;
 }
 
 .hero-card {
-	padding: 22px;
+	padding: 24px;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	gap: 16px;
+	background: linear-gradient(130deg, #5b3cf0 0%, #4453ff 62%, #6f8dff 100%);
+	border-color: rgba(99, 102, 241, 0.42);
 
 	h2 {
 		font-size: 24px;
 		line-height: 1.25;
-		color: #111827;
+		color: #ffffff;
 	}
 
 	p {
 		margin-top: 6px;
 		font-size: 14px;
-		color: #6b7280;
+		color: rgba(237, 239, 255, 0.9);
 	}
 }
 
@@ -207,6 +253,28 @@ onMounted(() => {
 
 .stat-item {
 	padding: 16px 18px;
+}
+
+.stat-purple {
+	background: linear-gradient(145deg, #f2eeff 0%, #e9e5ff 100%);
+}
+
+.stat-blue {
+	background: linear-gradient(145deg, #eaf2ff 0%, #dfebff 100%);
+}
+
+.stat-yellow {
+	background: linear-gradient(145deg, #fff8dd 0%, #ffefb5 100%);
+}
+
+.stat-dark {
+	background: linear-gradient(145deg, #1f2436 0%, #2a2f47 100%);
+
+	.stat-label,
+	.stat-value,
+	.stat-foot {
+		color: #f3f4f6;
+	}
 }
 
 .stat-label {
@@ -254,8 +322,8 @@ onMounted(() => {
 .quick-item {
 	height: 72px;
 	border-radius: 12px;
-	border: 1px solid var(--el-border-color-light);
-	background: #f9fafb;
+	border: 1px solid #dbe2f2;
+	background: #f6f8ff;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -268,8 +336,8 @@ onMounted(() => {
 
 	&:hover {
 		transform: translateY(-2px);
-		border-color: #c7d2fe;
-		background: #eef2ff;
+		border-color: #aebdff;
+		background: #eaf0ff;
 	}
 }
 

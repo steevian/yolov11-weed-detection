@@ -1,14 +1,14 @@
 ﻿<template>
 	<div class="system-role-container layout-padding">
-		<div class="system-role-padding layout-padding-auto layout-padding-view">
-			<div class="history-title-row">
+		<div class="system-role-padding layout-padding-auto layout-padding-view workbench-page-body">
+			<div class="history-title-row workbench-title-row">
 				<div>
-					<h3 class="history-title">图像检测记录</h3>
-					<p class="history-subtitle">查看历史图像检测结果，支持按用户和识别结果筛选</p>
+					<h3 class="history-title workbench-title">图像检测记录</h3>
+					<p class="history-subtitle workbench-subtitle">查看历史图像检测结果，支持按用户和识别结果筛选</p>
 				</div>
 			</div>
 
-			<div class="system-user-search action-card mb15">
+			<div class="system-user-search action-card workbench-action-card mb15">
 				<el-input v-model="state.tableData.param.search1" size="default" placeholder="请输入用户名"
 					style="max-width: 180px"> </el-input>
 				<el-input v-model="state.tableData.param.search2" size="default" placeholder="请输入识别结果"
@@ -57,7 +57,7 @@
 				</el-collapse-item>
 			</el-collapse>
 			
-			<el-table :data="state.tableData.data" v-loading="state.tableData.loading" style="width: 100%" class="history-table">
+			<el-table :data="state.tableData.data" v-loading="state.tableData.loading" style="width: 100%" class="history-table workbench-table-card workbench-table-main">
 				<el-table-column type="expand">
 					<template #default="props">
 						<div m="4">
@@ -161,7 +161,7 @@
 			<el-pagination 
 				@size-change="onHandleSizeChange" 
 				@current-change="onHandleCurrentChange" 
-				class="mt15 history-pagination"
+				class="mt15 history-pagination workbench-pagination"
 				:pager-count="5" 
 				:page-sizes="[10, 20, 30]" 
 				v-model:current-page="state.tableData.param.pageNum"
@@ -372,7 +372,7 @@ const formatDateTime = (dateTime: string | Date): string => {
 			}
 
 			if (isNaN(date.getTime())) {
-				return typeof dateTime === 'string' ? dateTime.substring(0, 19) : '无效时间';
+				return String(dateTime).substring(0, 19);
 			}
 
 			const pad = (n: number) => String(n).padStart(2, '0');
@@ -382,7 +382,7 @@ const formatDateTime = (dateTime: string | Date): string => {
 		}
 
     if (isNaN(date.getTime())) {
-      return typeof dateTime === 'string' ? dateTime.substring(0, 19) : '无效时间';
+		return String(dateTime).substring(0, 19);
     }
 
 		return new Intl.DateTimeFormat('zh-CN', {
@@ -443,7 +443,7 @@ const getTableData = () => {
 				if (data.records && Array.isArray(data.records)) {
 					data.records.forEach((record: any, index: number) => {
 						// 解析detections字段
-						let detections = [];
+						let detections: any[] = [];
 						try {
 							if (record.detections && record.detections !== '') {
 								detections = typeof record.detections === 'string' 
@@ -455,7 +455,7 @@ const getTableData = () => {
 						}
 						
 						// 解析label字段
-						let labels = [];
+						let labels: any[] = [];
 						try {
 							if (record.label && record.label !== '') {
 								labels = typeof record.label === 'string'
@@ -473,7 +473,7 @@ const getTableData = () => {
 						}
 						
 						// 解析confidence字段
-						let confidences = [];
+						let confidences: number[] = [];
 						try {
 							if (record.confidence && record.confidence !== '') {
 								confidences = typeof record.confidence === 'string'
@@ -533,7 +533,7 @@ const getTableData = () => {
 					ElMessage.success(`获取到 ${state.tableData.data.length} 条记录`);
 				}
 			} else {
-				ElMessage.error(data.message || '获取记录失败');
+				ElMessage.error((res as any)?.message || '获取记录失败');
 			}
 		})
 		.catch((error) => {
@@ -618,11 +618,9 @@ onMounted(() => {
 	flex-direction: column;
 
 	.system-role-padding {
-		padding: 16px;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
 		overflow: auto;
 	}
 }
@@ -634,16 +632,11 @@ onMounted(() => {
 }
 
 .history-title {
-	font-size: 24px;
-	line-height: 1.25;
-	font-weight: 700;
-	color: var(--app-text-1, #111827);
+	color: var(--app-text-1);
 }
 
 .history-subtitle {
-	margin-top: 6px;
-	font-size: 13px;
-	color: var(--app-text-2, #6b7280);
+	color: var(--app-text-2);
 }
 
 .system-user-search {
@@ -660,10 +653,7 @@ onMounted(() => {
 }
 
 .action-card {
-	background: #fff;
-	border: 1px solid var(--el-border-color-light);
-	border-radius: 14px;
-	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+	background: transparent;
 }
 
 .debug-collapse {
@@ -687,11 +677,6 @@ onMounted(() => {
 
 .history-table {
 	flex: 1;
-	background: #fff;
-	border-radius: 12px;
-	overflow: hidden;
-	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
-	border: 1px solid var(--el-border-color-light);
 	
 	:deep(.el-table__row) {
 		&:hover {

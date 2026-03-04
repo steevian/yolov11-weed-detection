@@ -1,35 +1,57 @@
-﻿<template>
-	<div class="login-container">
-		<div class="bg-bubbles">
-			<li v-for="n in 10" :key="n"></li>
+<template>
+	<div class="register-page">
+		<div class="starry-bg" aria-hidden="true">
+			<div class="stars-layer"></div>
+			<div class="stars-layer stars-layer-2"></div>
+			<div class="meteor meteor-a"></div>
+			<div class="meteor meteor-b"></div>
 		</div>
 
-		<div class="login-box animate__animated animate__fadeIn">
-			<div class="title">
-				<h2>基于YOLOV11的杂草识别系统</h2>
-				<p>YOLOV11-based Crop Disease and Pest Detection System</p>
+		<div class="container">
+			<div class="left-panel">
+				<div class="left-content">
+					<h3 class="left-title">基于YOLOV11的杂草检测系统</h3>
+					<div class="cartoon-group">
+						<div class="character orange"></div>
+						<div class="character purple"></div>
+						<div class="character black"></div>
+						<div class="character yellow"></div>
+					</div>
+				</div>
 			</div>
 
-			<el-form :model="ruleForm" :rules="registerRules" ref="ruleFormRef">
-				<el-form-item prop="username">
-					<el-input v-model="ruleForm.username" placeholder="请输入用户名" prefix-icon="User" class="custom-input" />
-				</el-form-item>
+			<div class="register-panel">
+				<div class="register-card">
+					<svg class="logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+						<path
+							d="M12 2c1.8 0 3.2 1.5 3.2 3.3S13.8 8.6 12 8.6 8.8 7.1 8.8 5.3 10.2 2 12 2Zm0 13.4c1.8 0 3.2 1.5 3.2 3.3S13.8 22 12 22s-3.2-1.5-3.2-3.3 1.4-3.3 3.2-3.3ZM2 12c0-1.8 1.5-3.2 3.3-3.2S8.6 10.2 8.6 12s-1.5 3.2-3.3 3.2S2 13.8 2 12Zm13.4 0c0-1.8 1.5-3.2 3.3-3.2S22 10.2 22 12s-1.5 3.2-3.3 3.2-3.3-1.4-3.3-3.2Z"
+							fill="#17171f"
+						/>
+					</svg>
+					<h2>欢迎注册！</h2>
 
-				<el-form-item prop="password">
-					<el-input v-model="ruleForm.password" type="password" placeholder="请输入密码" prefix-icon="Lock" show-password class="custom-input" />
-				</el-form-item>
+					<el-form :model="ruleForm" :rules="registerRules" ref="ruleFormRef" class="register-form">
+						<el-form-item prop="username">
+							<el-input v-model="ruleForm.username" placeholder="请输入用户名" prefix-icon="User" class="custom-input" />
+						</el-form-item>
 
-				<el-form-item prop="confirm">
-					<el-input v-model="ruleForm.confirm" type="password" placeholder="请确认密码" prefix-icon="Lock" show-password class="custom-input" />
-				</el-form-item>
+						<el-form-item prop="password">
+							<el-input v-model="ruleForm.password" type="password" placeholder="请输入密码" prefix-icon="Lock" show-password class="custom-input" />
+						</el-form-item>
 
-				<el-form-item>
-					<el-button type="primary" class="login-btn" @click="submitForm(ruleFormRef)"> 注册 </el-button>
-				</el-form-item>
-			</el-form>
+						<el-form-item prop="confirm">
+							<el-input v-model="ruleForm.confirm" type="password" placeholder="请确认密码" prefix-icon="Lock" show-password class="custom-input" />
+						</el-form-item>
 
-			<div class="options">
-				<router-link to="/login">已有账号？登录</router-link>
+						<el-form-item>
+							<el-button type="primary" class="register-btn" @click="submitForm(ruleFormRef)">注册</el-button>
+						</el-form-item>
+					</el-form>
+
+					<div class="options">
+						<router-link to="/login">已有账号？登录</router-link>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -96,284 +118,306 @@ const submitForm = (formEl: FormInstance | undefined) => {
 </script>
 
 <style scoped>
-.login-container {
+.register-page {
 	min-height: 100vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: linear-gradient(135deg, #56ccf2 0%, #2f80ed 100%);
-	padding: 20px;
+	background: transparent;
+	padding: 24px;
+	position: relative;
+	overflow: hidden;
+	isolation: isolate;
 }
 
-.login-box {
+.starry-bg {
+	position: fixed;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	overflow: hidden;
+	background: linear-gradient(to bottom, #0a0a1a 0%, #12122b 100%);
+}
+
+.stars-layer {
+	position: absolute;
+	inset: -20%;
+	background-image: radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0)), radial-gradient(1.6px 1.6px at 72% 22%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0)), radial-gradient(2.3px 2.3px at 38% 78%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0)), radial-gradient(1.4px 1.4px at 82% 67%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0)), radial-gradient(2px 2px at 52% 48%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+	background-size: 460px 460px;
+	animation: twinkle 8.5s ease-in-out infinite alternate;
+}
+
+.stars-layer-2 {
+	opacity: 0.7;
+	filter: blur(0.4px);
+	animation-duration: 11s;
+	animation-direction: alternate-reverse;
+}
+
+.meteor {
+	position: absolute;
+	width: 180px;
+	height: 2px;
+	border-radius: 999px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(243, 244, 255, 0.8) 58%, #ffffff 100%);
+	filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.52));
+	transform: rotate(-38deg);
+	opacity: 0;
+	animation: meteorFly 6.2s linear infinite;
+}
+
+.meteor-a {
+	left: 12%;
+	top: 72%;
+}
+
+.meteor-b {
+	left: 38%;
+	top: 86%;
+	animation-delay: 2.8s;
+}
+
+.container {
+	width: min(980px, 94vw);
+	min-height: 620px;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	border-radius: 28px;
+	overflow: hidden;
+	box-shadow: 0 30px 70px rgba(8, 12, 30, 0.5);
+	background: #ffffff;
+	border: 1px solid rgba(255, 255, 255, 0.46);
 	position: relative;
 	z-index: 2;
-	transform: translateY(20px);
-	animation: slideUp 0.8s forwards;
-	opacity: 0;
-	width: 460px;
-	padding: 40px 50px;
-	background: rgba(255, 255, 255, 0.95);
-	border-radius: 16px;
-	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-	backdrop-filter: blur(10px);
 }
 
-.title {
-	text-align: center;
-	margin-bottom: 35px;
-}
-
-.title h2 {
-	font-size: 20px;
-	color: #2c3e50;
-	margin-bottom: 10px;
-	font-weight: 600;
-}
-
-.title p {
-	font-size: 10px;
-	color: #7f8c8d;
-	letter-spacing: 1px;
-}
-
-:deep(.custom-input .el-input__wrapper) {
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-	border-radius: 8px;
-	padding: 12px 15px;
-	background: #f8fafc;
-}
-
-:deep(.custom-input .el-input__wrapper:hover) {
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-:deep(.custom-input .el-input__wrapper.is-focus) {
-	box-shadow: 0 0 0 1px #409eff;
-	background: #fff;
-}
-
-.login-btn {
-	width: 100%;
-	padding: 12px 0;
-	font-size: 16px;
-	font-weight: 500;
-	letter-spacing: 1px;
-	border-radius: 8px;
-	background: linear-gradient(to right, #2f80ed 0%, #56ccf2 100%);
-	border: none;
-	margin-top: 10px;
-	transition: transform 0.3s ease;
-}
-
-.login-btn:hover {
-	transform: translateY(-2px);
-	background: linear-gradient(to right, #2f80ed 0%, #56ccf2 100%);
-	opacity: 0.9;
-}
-
-.options {
-	margin-top: 25px;
-	text-align: center;
-}
-
-.options a {
-	color: #2f80ed;
-	text-decoration: none;
-	font-size: 15px;
-	transition: all 0.3s ease;
-	font-weight: 500;
-}
-
-.options a:hover {
-	color: #56ccf2;
-	text-decoration: underline;
-}
-
-.bg-bubbles {
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: 1;
+.left-panel {
+	background: linear-gradient(165deg, #f5f6ff 0%, #eef1ff 54%, #f8f9ff 100%);
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
 	overflow: hidden;
 }
 
-.bg-bubbles li {
-	position: absolute;
-	list-style: none;
-	display: block;
-	width: 40px;
-	height: 40px;
-	background-color: rgba(255, 255, 255, 0.15);
-	bottom: -160px;
-	animation: square 25s infinite;
-	transition-timing-function: linear;
+.left-content {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 20px;
+	transform: translateY(-18px);
 }
 
-.bg-bubbles li:nth-child(1) {
-	left: 10%;
-	width: 80px;
-	height: 80px;
-	animation-delay: 0s;
+.left-title {
+	margin: 0;
+	color: #222;
+	font-size: 28px;
+	font-weight: 700;
+	text-align: center;
+	line-height: 1.2;
+	letter-spacing: 0.5px;
 }
 
-.bg-bubbles li:nth-child(2) {
-	left: 20%;
-	width: 90px;
-	height: 90px;
-	animation-delay: 2s;
-	animation-duration: 17s;
+.cartoon-group {
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	gap: 15px;
+	transform: translateY(88px);
 }
 
-.bg-bubbles li:nth-child(3) {
-	left: 25%;
-	animation-delay: 4s;
+.character {
+	animation: idleFloat 3.6s ease-in-out infinite;
 }
 
-.bg-bubbles li:nth-child(4) {
-	left: 40%;
-	width: 60px;
-	height: 60px;
-	animation-duration: 22s;
-}
-
-.bg-bubbles li:nth-child(5) {
-	left: 70%;
-	width: 120px;
-	height: 120px;
-}
-
-.bg-bubbles li:nth-child(6) {
-	left: 80%;
-	width: 90px;
-	height: 90px;
-	animation-delay: 3s;
-}
-
-.bg-bubbles li:nth-child(7) {
-	left: 32%;
-	width: 60px;
-	height: 60px;
-	animation-delay: 7s;
-}
-
-.bg-bubbles li:nth-child(8) {
-	left: 55%;
-	width: 20px;
-	height: 20px;
-	animation-delay: 15s;
-	animation-duration: 40s;
-}
-
-.bg-bubbles li:nth-child(9) {
-	left: 25%;
-	width: 10px;
-	height: 10px;
-	animation-delay: 2s;
-	animation-duration: 40s;
-}
-
-.bg-bubbles li:nth-child(10) {
-	left: 90%;
+.orange {
 	width: 160px;
-	height: 160px;
-	animation-delay: 11s;
+	height: 120px;
+	border-radius: 80px 80px 0 0;
+	background: #ff8c1a;
 }
 
-@keyframes square {
+.purple {
+	width: 90px;
+	height: 180px;
+	border-radius: 10px;
+	background: #7d3cff;
+	animation-delay: 0.12s;
+}
+
+.black {
+	width: 60px;
+	height: 150px;
+	border-radius: 10px;
+	background: #1e1e1e;
+	animation-delay: 0.18s;
+}
+
+.yellow {
+	width: 70px;
+	height: 140px;
+	border-radius: 35px;
+	background: #ffd000;
+	animation-delay: 0.28s;
+}
+
+.register-panel {
+	background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 32px 40px;
+}
+
+.register-card {
+	width: min(360px, 100%);
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 16px;
+	padding: 4px 0;
+}
+
+.logo {
+	width: 24px;
+	height: 24px;
+	display: block;
+	margin: 0;
+}
+
+.register-card h2 {
+	margin: 0;
+	text-align: left;
+	color: #1a1a21;
+	font-family: 'Ma Shan Zheng', 'ZCOOL KuaiLe', cursive;
+	font-size: 24px;
+	line-height: 1.2;
+	letter-spacing: 0.2px;
+}
+
+.register-form {
+	width: 100%;
+	margin-top: 8px;
+}
+
+:deep(.register-form .el-form-item) {
+	margin-bottom: 16px;
+}
+
+:deep(.custom-input .el-input__wrapper) {
+	box-shadow: none;
+	border-radius: 10px;
+	padding: 10px 12px;
+	background: #f6f7fd;
+	border: 1px solid #e6e8f4;
+}
+
+:deep(.custom-input .el-input__wrapper:hover) {
+	border-color: #cfd4ff;
+}
+
+:deep(.custom-input .el-input__wrapper.is-focus) {
+	box-shadow: 0 0 0 2px rgba(92, 100, 255, 0.15);
+	border-color: #5c64ff;
+	background: #fff;
+}
+
+.register-btn {
+	width: 100%;
+	height: 46px;
+	font-size: 15px;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	border-radius: 24px;
+	background: linear-gradient(90deg, #1f2240, #4d54ff);
+	border: none;
+	box-shadow: 0 10px 20px rgba(77, 84, 255, 0.3);
+}
+
+.register-btn:hover {
+	filter: brightness(1.03);
+}
+
+.options {
+	margin-top: 2px;
+	text-align: center;
+	width: 100%;
+}
+
+.options a {
+	color: #3a448f;
+	text-decoration: none;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.options a:hover {
+	color: #1e2355;
+}
+
+@keyframes twinkle {
 	0% {
-		transform: translateY(0) rotate(0deg);
-		opacity: 1;
-	}
-	100% {
-		transform: translateY(-1000px) rotate(600deg);
-		opacity: 0;
-	}
-}
-
-@keyframes slideUp {
-	from {
-		transform: translateY(20px);
-		opacity: 0;
-	}
-	to {
-		transform: translateY(0);
-		opacity: 1;
-	}
-}
-
-:deep(.el-form-item) {
-	opacity: 0;
-}
-
-:deep(.el-form-item:nth-child(odd)) {
-	transform: translateX(-50px);
-	animation: slideRightIn 0.5s forwards;
-}
-
-:deep(.el-form-item:nth-child(even)) {
-	transform: translateX(50px);
-	animation: slideLeftIn 0.5s forwards;
-}
-
-:deep(.el-form-item:nth-child(1)) {
-	animation-delay: 0.2s;
-}
-:deep(.el-form-item:nth-child(2)) {
-	animation-delay: 0.4s;
-}
-
-@keyframes slideRightIn {
-	from {
-		transform: translateX(-50px);
-		opacity: 0;
-	}
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
-}
-
-@keyframes slideLeftIn {
-	from {
-		transform: translateX(50px);
-		opacity: 0;
-	}
-	to {
-		transform: translateX(0);
-		opacity: 1;
-	}
-}
-
-.login-btn {
-	transition: all 0.3s ease;
-}
-
-.login-btn:hover {
-	transform: translateY(-3px);
-	box-shadow: 0 7px 14px rgba(50, 50, 93, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
-}
-
-.login-btn:active {
-	transform: translateY(-1px);
-}
-
-:deep(.el-input__wrapper.is-focus) {
-	animation: pulse 0.3s ease-in-out;
-}
-
-@keyframes pulse {
-	0% {
-		transform: scale(1);
+		opacity: 0.48;
 	}
 	50% {
-		transform: scale(1.02);
+		opacity: 0.96;
 	}
 	100% {
-		transform: scale(1);
+		opacity: 0.56;
+	}
+}
+
+@keyframes meteorFly {
+	0% {
+		opacity: 0;
+		transform: translate3d(0, 0, 0) rotate(-38deg) scaleX(0.72);
+	}
+	12% {
+		opacity: 0;
+	}
+	20% {
+		opacity: 1;
+	}
+	80% {
+		opacity: 0.94;
+	}
+	100% {
+		opacity: 0;
+		transform: translate3d(340px, -320px, 0) rotate(-38deg) scaleX(1);
+	}
+}
+
+@keyframes idleFloat {
+	0%,
+	100% {
+		translate: 0 0;
+	}
+	50% {
+		translate: 0 -7px;
+	}
+}
+
+@media (max-width: 900px) {
+	.container {
+		grid-template-columns: 1fr;
+		width: min(560px, 95vw);
+	}
+
+	.left-panel {
+		min-height: 320px;
+	}
+
+	.left-content {
+		transform: none;
+	}
+
+	.cartoon-group {
+		transform: translate(0, 20px);
+	}
+
+	.register-panel {
+		padding: 30px;
 	}
 }
 </style>
-

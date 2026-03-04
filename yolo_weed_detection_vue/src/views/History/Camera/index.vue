@@ -1,14 +1,14 @@
 ﻿<template>
 	<div class="system-role-container layout-padding">
-		<div class="system-role-padding layout-padding-auto layout-padding-view">
-			<div class="history-title-row">
+		<div class="system-role-padding layout-padding-auto layout-padding-view workbench-page-body">
+			<div class="history-title-row workbench-title-row">
 				<div>
-					<h3 class="history-title">摄像检测记录</h3>
-					<p class="history-subtitle">查看摄像头检测历史，支持用户与阈值筛选、快速预览</p>
+					<h3 class="history-title workbench-title">摄像检测记录</h3>
+					<p class="history-subtitle workbench-subtitle">查看摄像头检测历史，支持用户与阈值筛选、快速预览</p>
 				</div>
 			</div>
 
-			<div class="system-user-search action-card mb15">
+			<div class="system-user-search action-card workbench-action-card mb15">
 				<el-input v-model="state.tableData.param.search1" size="default" placeholder="请输入用户名" 
 					style="max-width: 200px"> </el-input>
 				<el-input v-model="state.tableData.param.search2" size="default" placeholder="请输入最小阈值" 
@@ -43,7 +43,7 @@
 				</el-col>
 			</el-row>
 			
-			<el-table :data="state.tableData.data" v-loading="state.tableData.loading" class="history-table" style="width: 100%; margin-top: 6px;">
+			<el-table :data="state.tableData.data" v-loading="state.tableData.loading" class="history-table workbench-table-card workbench-table-main" style="width: 100%; margin-top: 6px;">
 				<el-table-column prop="num" label="序号" width="80" align="center" />
 				<el-table-column prop="out_video" label="处理结果" width="200" align="center">
 					<template #default="scope">
@@ -97,7 +97,7 @@
 			<el-pagination 
 				@size-change="onHandleSizeChange" 
 				@current-change="onHandleCurrentChange" 
-				class="mt15 history-pagination"
+				class="mt15 history-pagination workbench-pagination"
 				:pager-count="5" 
 				:page-sizes="[10, 20, 30, 50]" 
 				v-model:current-page="state.tableData.param.pageNum"
@@ -424,11 +424,9 @@ onMounted(() => {
 	flex-direction: column;
 
 	.system-role-padding {
-		padding: 16px;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
 		overflow: auto;
 	}
 }
@@ -440,16 +438,11 @@ onMounted(() => {
 }
 
 .history-title {
-	font-size: 24px;
-	line-height: 1.25;
-	font-weight: 700;
-	color: var(--app-text-1, #111827);
+	color: var(--app-text-1);
 }
 
 .history-subtitle {
-	margin-top: 6px;
-	font-size: 13px;
-	color: var(--app-text-2, #6b7280);
+	color: var(--app-text-2);
 }
 
 .system-user-search {
@@ -466,10 +459,7 @@ onMounted(() => {
 }
 
 .action-card {
-	background: #fff;
-	border: 1px solid var(--el-border-color-light);
-	border-radius: 14px;
-	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+	background: transparent;
 }
 
 .stats-row {
@@ -574,11 +564,6 @@ onMounted(() => {
 
 .history-table {
 	flex: 1;
-	background: #fff;
-	border-radius: 10px;
-	overflow: hidden;
-	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
-	border: 1px solid var(--el-border-color-light);
 	
 	:deep(.el-table__row) {
 		&:hover {

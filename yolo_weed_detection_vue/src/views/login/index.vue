@@ -408,12 +408,14 @@ onUnmounted(() => {
 	font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
 	padding: 24px;
 	position: relative;
+	overflow: hidden;
+	isolation: isolate;
 }
 
 .starry-bg {
 	position: fixed;
 	inset: 0;
-	z-index: -1;
+	z-index: 0;
 	pointer-events: none;
 	overflow: hidden;
 	background: linear-gradient(to bottom, #0a0a1a 0%, #12122b 100%);
@@ -507,17 +509,17 @@ onUnmounted(() => {
 	min-height: 620px;
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	border-radius: 22px;
+	border-radius: 28px;
 	overflow: hidden;
-	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 30px 70px rgba(8, 12, 30, 0.5);
 	background: #ffffff;
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.46);
 	position: relative;
-	z-index: 1;
+	z-index: 2;
 }
 
 .left-panel {
-	background: #f0f0f0;
+	background: linear-gradient(165deg, #f5f6ff 0%, #eef1ff 54%, #f8f9ff 100%);
 	position: relative;
 	display: flex;
 	align-items: center;
@@ -707,7 +709,7 @@ onUnmounted(() => {
 }
 
 .login {
-	background: #ffffff;
+	background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -720,6 +722,7 @@ onUnmounted(() => {
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 16px;
+	padding: 4px 0;
 }
 
 .logo {
@@ -772,7 +775,7 @@ onUnmounted(() => {
 }
 
 .text-input:focus {
-	border-bottom-color: #56566a;
+	border-bottom-color: #5c64ff;
 }
 
 .password-box {
@@ -842,9 +845,10 @@ onUnmounted(() => {
 }
 
 .primary-btn {
-	background: linear-gradient(90deg, #161622, #1f2033);
+	background: linear-gradient(90deg, #1f2240, #4d54ff);
 	color: #fff;
 	margin: 0;
+	box-shadow: 0 10px 20px rgba(77, 84, 255, 0.3);
 }
 
 .primary-btn:disabled {
@@ -853,8 +857,8 @@ onUnmounted(() => {
 }
 
 .google-btn {
-	background: #f3f3f3;
-	color: #2f2f35;
+	background: #f2f4ff;
+	color: #2a3054;
 	text-decoration: none;
 }
 
