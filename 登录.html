@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Lively Login with Covering Arms</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap");
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      padding: 24px;
+      position: relative;
+    }
+
+    .starry-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #0a0a1a 0%, #12122b 100%);
+    }
+
+    .stars-layer,
+    .meteors-layer {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #f0f0f0;
+      animation-timing-function: ease-in-out;
+      animation-iteration-count: infinite;
+      animation-direction: alternate;
+      will-change: opacity;
+    }
+
+    .star.glow {
+      box-shadow: 0 0 12px 4px rgba(255,255,255,0.55), 0 0 32px 8px rgba(255,255,255,0.18);
+    }
+
+    @keyframes twinkleA {
+      0%,
+      100% {
+        opacity: var(--twinkle-min, 0.4);
+      }
+      50% {
+        opacity: var(--twinkle-max, 1);
+      }
+    }
+
+    @keyframes twinkleB {
+      0%,
+      100% {
+        opacity: var(--twinkle-max, 1);
+      }
+      50% {
+        opacity: var(--twinkle-min, 0.4);
+      }
+    }
+
+    .meteor {
+      position: absolute;
+      width: var(--meteor-length, 170px);
+      height: 2px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(240, 240, 240, 0.75) 58%, #ffffff 100%);
+      border-radius: 999px;
+      transform-origin: center left;
+      filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+      animation: meteorFly var(--meteor-duration, 1.4s) linear forwards;
+      will-change: transform, opacity;
+    }
+
+    .meteor::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: 50%;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #ffffff;
+      transform: translateY(-50%);
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.72);
+    }
+
+    @keyframes meteorFly {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 0, 0) rotate(var(--meteor-angle, -45deg)) scaleX(0.72);
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 0.95;
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(var(--meteor-dx, 320px), var(--meteor-dy, -320px), 0) rotate(var(--meteor-angle, -45deg)) scaleX(1);
+      }
+    }
+
+    .container {
+      width: min(980px, 94vw);
+      min-height: 620px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      background: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      z-index: 1;
+    }
+
+    .left-panel {
+      background: #f0f0f0;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .left-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      transform: translateY(-18px);
+    }
+
+    .left-title {
+      margin: 0;
+      color: #222;
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1.2;
+      letter-spacing: 0.5px;
+    }
+
+    .cartoon-group {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 15px;
+      transform: translateY(88px); /* 四个角色位置参数，加大则下移 */
+    }
+
+    .character {
+      --lookX: 0px;
+      --lookBend: 0deg;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      transform-origin: bottom center;
+      transform: translateX(var(--lookX)) skewX(var(--lookBend));
+      transition: transform 0.3s ease-out;
+      animation: idleFloat 3.6s ease-in-out infinite;
+    }
+
+    .orange {
+      width: 160px;
+      height: 120px;
+      border-radius: 80px 80px 0 0;
+      background: #ff8c1a;
+    }
+
+    .purple {
+      width: 90px;
+      height: 180px;
+      border-radius: 10px;
+      background: #7d3cff;
+      animation-delay: 0.12s;
+    }
+
+    .black {
+      width: 60px;
+      height: 150px;
+      border-radius: 10px;
+      background: #1e1e1e;
+      animation-delay: 0.18s;
+    }
+
+    .yellow {
+      width: 70px;
+      height: 140px;
+      border-radius: 35px;
+      background: #ffd000;
+      animation-delay: 0.28s;
+    }
+
+    .arms {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 8px;
+      pointer-events: none;
+    }
+
+    .arm {
+      width: 15px;
+      height: 50px;
+      background: inherit;
+      border-radius: 10px;
+      transform-origin: top center;
+      transition: transform 0.3s ease;
+      animation: wave 1.6s ease-in-out infinite;
+    }
+
+    .arm.right {
+      animation-direction: reverse;
+    }
+
+    .eyes {
+      display: flex;
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .eye {
+      width: 14px;
+      height: 14px;
+      background: #ffffff;
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .eye.single {
+      margin-top: 35px;
+      margin-left: 0;
+    }
+
+    .pupil {
+      width: 6px;
+      height: 6px;
+      background: #171717;
+      border-radius: 50%;
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      transition: transform 0.15s ease;
+    }
+
+    .mouth {
+      width: 12px;
+      height: 4px;
+      margin-top: 12px;
+      background: #111;
+    }
+
+    .smile {
+      border-radius: 0 0 10px 10px;
+    }
+
+    .flat {
+      width: 16px;
+    }
+
+    @keyframes idleFloat {
+      0%,
+      100% {
+        translate: 0 0;
+      }
+      50% {
+        translate: 0 -7px; /* 角色浮动动画幅度调到8是增大 */
+      }
+    }
+
+    @keyframes wave {
+      0%,
+      100% {
+        transform: rotate(0deg);
+      }
+      50% {
+        transform: rotate(16deg);
+      }
+    }
+
+    .look-form {    /* 角色倾斜方向和角度 */
+      --lookX: -6px;
+      --lookBend: -4deg;
+    }
+
+    .look-away {
+      --lookX: 6px;
+      --lookBend: 5deg;
+    }
+
+    .cover .arm.left {
+      transform: rotate(-72deg) translate(-8px, -8px);
+      animation: none;
+    }
+
+    .cover .arm.right {
+      transform: rotate(72deg) translate(8px, -8px);
+      animation: none;
+    }
+
+    .login {
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 40px;
+    }
+
+    .login-card {
+      width: min(340px, 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .logo {
+      width: 24px;
+      height: 24px;
+      display: block;
+      margin: 0;
+    }
+
+    .login h2 {
+      margin: 0;
+      text-align: left;
+      color: #1a1a21;
+      font-family: "Ma Shan Zheng", "ZCOOL KuaiLe", cursive;
+      font-size: 24px;
+      line-height: 1.2;
+      letter-spacing: 0.2px;
+    }
+
+    .field-group {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .account-field {
+      margin-top: 16px;
+    }
+
+    .field-label {
+      display: block;
+      margin: 0;
+      color: #2f2f35;
+      font-size: clamp(16px, 1.45vw, 25px);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .text-input {
+      width: 100%;
+      border: none;
+      border-bottom: 2px solid #d9d9dd;
+      outline: none;
+      padding: 8px 4px 10px;
+      font-size: 16px;
+      color: #15151a;
+      margin: 0;
+      background: transparent;
+    }
+
+    .text-input:focus {
+      border-bottom-color: #56566a;
+    }
+
+    .password-box {
+      position: relative;
+      margin: 0;
+      width: 100%;
+    }
+
+    #toggle {
+      position: absolute;
+      right: 2px;
+      top: 10px;
+      font-size: 15px;
+      color: #777;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .aux-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin: 0;
+      font-size: 12px;
+      color: #8c8c94;
+    }
+
+    .remember {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .remember input {
+      margin: 0;
+      width: 14px;
+      height: 14px;
+      accent-color: #16161f;
+    }
+
+    .forgot,
+    .signup {
+      text-decoration: none;
+      color: #8c8c94;
+      font-weight: 600;
+    }
+
+    .forgot:hover,
+    .signup:hover {
+      color: #1d1d26;
+    }
+
+    .primary-btn,
+    .google-btn {
+      width: 100%;
+      height: 46px;
+      border: none;
+      border-radius: 24px;
+      cursor: pointer;
+      font-size: clamp(14px, 1.1vw, 18px);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .primary-btn {
+      background: linear-gradient(90deg, #161622, #1f2033);
+      color: #fff;
+      margin: 0;
+    }
+
+    .google-btn {
+      background: #f3f3f3;
+      color: #2f2f35;
+    }
+
+    .bottom-note {
+      margin: 0;
+      text-align: left;
+      font-size: 12px;
+      color: #9b9ba2;
+      font-weight: 600;
+    }
+
+    .signup {
+      color: #1d1d26;
+      margin-left: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+        width: min(560px, 95vw);
+      }
+
+      .left-panel {
+        min-height: 380px;
+      }
+
+      .left-content {
+        transform: none;
+      }
+
+      .cartoon-group {
+        transform: translate(0, 12px);
+      }
+
+      .login {
+        padding: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="starry-bg" aria-hidden="true">
+  <div class="stars-layer" id="starsLayer"></div>
+  <div class="meteors-layer" id="meteorsLayer"></div>
+</div>
+
+<div class="container">
+  <div class="left-panel">
+    <div class="left-content">
+      <h3 class="left-title">基于YOLOV11的杂草检测系统</h3>
+      <div class="cartoon-group">
+
+        <div class="character orange">
+          <div class="arms">
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+          </div>
+          <div class="eyes"><div class="eye"><div class="pupil"></div></div><div class="eye"><div class="pupil"></div></div></div>
+          <div class="mouth smile"></div>
+        </div>
+
+        <div class="character purple">
+          <div class="arms">
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+          </div>
+          <div class="eyes"><div class="eye"><div class="pupil"></div></div><div class="eye"><div class="pupil"></div></div></div>
+          <div class="mouth smile"></div>
+        </div>
+
+        <div class="character black">
+          <div class="arms">
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+          </div>
+          <div class="eyes"><div class="eye"><div class="pupil"></div></div><div class="eye"><div class="pupil"></div></div></div>
+          <div class="mouth smile"></div>
+        </div>
+
+        <div class="character yellow">
+          <div class="arms">
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+          </div>
+          <div class="eye single"><div class="pupil"></div></div>
+          <div class="mouth flat"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="login">
+    <div class="login-card">
+      <svg class="logo" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 2c1.8 0 3.2 1.5 3.2 3.3S13.8 8.6 12 8.6 8.8 7.1 8.8 5.3 10.2 2 12 2Zm0 13.4c1.8 0 3.2 1.5 3.2 3.3S13.8 22 12 22s-3.2-1.5-3.2-3.3 1.4-3.3 3.2-3.3ZM2 12c0-1.8 1.5-3.2 3.3-3.2S8.6 10.2 8.6 12s-1.5 3.2-3.3 3.2S2 13.8 2 12Zm13.4 0c0-1.8 1.5-3.2 3.3-3.2S22 10.2 22 12s-1.5 3.2-3.3 3.2-3.3-1.4-3.3-3.2Z" fill="#17171f"/>
+      </svg>
+      <h2>欢迎访问！</h2>
+
+      <div class="field-group account-field">
+        <label class="field-label" for="email">账号</label>
+        <input class="text-input" type="text" id="email" placeholder="">
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="password">密码</label>
+        <div class="password-box">
+          <input class="text-input" type="password" id="password" placeholder="">
+          <span id="toggle">👁</span>
+        </div>
+      </div>
+
+      <div class="aux-row">
+        <label class="remember"><input type="checkbox" id="remember">30天内记住我</label>
+        <a class="forgot" href="#">忘记密码？</a>
+      </div>
+
+      <button class="primary-btn" type="button">登录</button>
+      <button class="google-btn" type="button">注册</button>
+
+      <p class="bottom-note">还没有账号？<a class="signup" href="#">立即注册</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const starsLayer = document.getElementById("starsLayer");
+  const meteorsLayer = document.getElementById("meteorsLayer");
+  const pupils = document.querySelectorAll(".pupil");
+  const toggle = document.getElementById("toggle");
+  const password = document.getElementById("password");
+  const email = document.getElementById("email");
+  const characters = document.querySelectorAll(".character");
+
+  let isPasswordVisible = false;
+  let meteorTimer = null;
+
+  createStars();
+  scheduleMeteor();
+
+  window.addEventListener("resize", debounce(() => {
+    createStars();
+  }, 220));
+
+  // Eyes follow mouse
+  document.addEventListener("mousemove", (e) => {
+    if (isPasswordVisible) return;
+    pupils.forEach(pupil => {
+      const rect = pupil.parentElement.getBoundingClientRect();
+      const x = e.clientX - (rect.left + rect.width / 2);
+      const y = e.clientY - (rect.top + rect.height / 2);
+      const angle = Math.atan2(y, x);
+      const moveX = Math.cos(angle) * 4;
+      const moveY = Math.sin(angle) * 4;
+      pupil.style.transform = `translate(${moveX}px,${moveY}px)`;
+    });
+  });
+
+  toggle.addEventListener("click", () => {
+    if (password.type === "password") {
+      password.type = "text";
+      toggle.textContent = "🙈";
+      isPasswordVisible = true;
+      coverEyes();
+    } else {
+      password.type = "password";
+      toggle.textContent = "👁";
+      isPasswordVisible = false;
+      resetCharacters();
+    }
+  });
+
+  email.addEventListener("focus", () => {
+    if (!isPasswordVisible) {
+      lookAtForm();
+    }
+  });
+  password.addEventListener("focus", () => {
+    if (!isPasswordVisible) lookAtForm();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (isPasswordVisible) return;
+
+    const target = event.target;
+    const isEmailInput = target === email;
+    const isPasswordInput = target === password;
+    const isToggle = toggle.contains(target);
+
+    if (isEmailInput || isPasswordInput || isToggle) return;
+    resetCharacters();
+  });
+
+  function lookAtForm() {
+    pupils.forEach(p => {
+      p.style.transform = "translate(4px,0)";
+    });
+    characters.forEach(c => {
+      c.classList.remove("look-away", "cover");
+      c.classList.add("look-form");
+    });
+  }
+
+  function coverEyes() {
+    pupils.forEach(p => {
+      p.style.transform = "translate(-8px,0)";
+    });
+    characters.forEach(c => {
+      c.classList.remove("look-form");
+      c.classList.add("look-away", "cover");
+    });
+  }
+
+  function resetCharacters() {
+    pupils.forEach(p => {
+      p.style.transform = "translate(0,0)";
+    });
+    characters.forEach(c => {
+      c.classList.remove("look-form", "look-away", "cover");
+    });
+  }
+
+  function createStars() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const area = width * height;
+    const count = Math.max(140, Math.min(320, Math.floor(area / 7800)));
+
+    starsLayer.innerHTML = "";
+
+    // 关键修复：为每颗星单独分配动画类型、时长、延迟和透明区间，确保独立异步闪烁。
+    for (let index = 0; index < count; index++) {
+      const star = document.createElement("span");
+      const size = 1 + Math.random() * 4.3;  // 星星大小参数
+      const minOpacity = 0.4 + Math.random() * 0.3;
+      const maxOpacity = (0.82 + Math.random() * 0.18) * 2;
+      const duration = 2 + Math.random() * 4;
+      const delay = -Math.random() * 6;
+
+      star.className = "star";
+      if (size >= 3.3 && Math.random() > 0.35) {
+        star.classList.add("glow");
+      }
+
+      star.style.left = `${Math.random() * 100}%`;
+      star.style.top = `${Math.random() * 100}%`;
+      star.style.width = `${size.toFixed(2)}px`;
+      star.style.height = `${size.toFixed(2)}px`;
+      star.style.animationName = Math.random() > 0.5 ? "twinkleA" : "twinkleB";
+      star.style.animationDuration = `${duration.toFixed(2)}s`;
+      star.style.animationDelay = `${delay.toFixed(2)}s`;
+      star.style.setProperty("--twinkle-min", minOpacity.toFixed(2));
+      star.style.setProperty("--twinkle-max", Math.min(1, maxOpacity).toFixed(2)); // opacity最大仍为1，但box-shadow增强
+
+      starsLayer.appendChild(star);
+    }
+  }
+
+  function spawnMeteor() {
+    const meteor = document.createElement("span");
+    const startX = -100 + Math.random() * (window.innerWidth * 0.52);
+    const startY = window.innerHeight * (0.52 + Math.random() * 0.44);
+    const distance = 280 + Math.random() * 460;
+    const angle = -28 - Math.random() * 30;
+    const duration = 2 + Math.random(); // 流星动画的持续时间
+    const length = 120 + Math.random() * 150;
+
+    meteor.className = "meteor";
+    meteor.style.left = `${startX}px`;
+    meteor.style.top = `${startY}px`;
+    meteor.style.setProperty("--meteor-dx", `${distance.toFixed(1)}px`);
+    meteor.style.setProperty("--meteor-dy", `${(-distance).toFixed(1)}px`);
+    meteor.style.setProperty("--meteor-angle", `${angle.toFixed(1)}deg`);
+    meteor.style.setProperty("--meteor-duration", `${duration.toFixed(2)}s`);
+    meteor.style.setProperty("--meteor-length", `${length.toFixed(1)}px`);
+
+    meteorsLayer.appendChild(meteor);
+
+    window.setTimeout(() => {
+      meteor.remove();
+    }, duration * 1000 + 120);
+  }
+
+  function scheduleMeteor() {
+    if (meteorTimer) {
+      window.clearTimeout(meteorTimer);
+    }
+
+    // 关键优化：提高流星触发频率到约每 3~8 秒，仍保持随机性。
+    const delay = 3000 + Math.random() * 5000;
+    meteorTimer = window.setTimeout(() => {
+      spawnMeteor();
+      scheduleMeteor();
+    }, delay);
+  }
+
+  function debounce(handler, wait) {
+    let timer = null;
+    return function (...args) {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        handler.apply(this, args);
+      }, wait);
+    };
+  }
+</script>
+
+</body>
+</html>

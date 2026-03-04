@@ -42,11 +42,26 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 		path: '/',
 		name: '/',
 		component: () => import('@/components/layout/index.vue'),
-		redirect: '/imgPredict', // 根路径重定向到图片检测，直接进入核心功能
+		redirect: '/dashboard',
 		meta: {
 			isKeepAlive: true,
 		},
 		children: [
+			{
+				path: '/dashboard',
+				name: 'dashboard',
+				component: () => import('@/views/Dashboard/index.vue'),
+				meta: {
+					title: '工作台',
+					isLink: '',
+					isHide: false,
+					isKeepAlive: true,
+					isAffix: true,
+					isIframe: false,
+					roles: ['admin', 'common', 'others'],
+					icon: 'ele-Odometer',
+				},
+			},
 			{
 				path: '/imgPredict',
 				name: 'imgPredict',
@@ -59,7 +74,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-tupian',
+					icon: 'ele-PictureFilled',
 				},
 			},
 			{
@@ -74,7 +89,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-shipin1',
+					icon: 'ele-VideoPlay',
 				},
 			},
 			{
@@ -90,7 +105,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-shexiangtou1',
+					icon: 'ele-Camera',
 				},
 			},
 			{
@@ -98,14 +113,14 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 				name: 'imgRecord',
 				component: () => import('@/views/History/Image/index.vue'),
 				meta: {
-					title: '图片识别记录',
+					title: '图像检测记录',
 					isLink: '',
 					isHide: false,
 					isKeepAlive: true,
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-tupianjilu',
+					icon: 'ele-DataAnalysis',
 				},
 			},
 			{
@@ -113,14 +128,14 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 				name: 'videoRecord',
 				component: () => import('@/views/History/Video/index.vue'),
 				meta: {
-					title: '视频识别记录',
+					title: '视频检测记录',
 					isLink: '',
 					isHide: false,
 					isKeepAlive: true,
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-shipinjilu',
+					icon: 'ele-Film',
 				},
 			},
 			{
@@ -128,14 +143,14 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 				name: 'cameraRecord',
 				component: () => import('@/views/History/Camera/index.vue'),
 				meta: {
-					title: '摄像识别记录',
+					title: '摄像检测记录',
 					isLink: '',
 					isHide: false,
 					isKeepAlive: true,
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-NVR',
+					icon: 'ele-VideoCameraFilled',
 				},
 			},
 			{
@@ -150,7 +165,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin'], // 仅管理员可见
-					icon: 'iconfont icon-yonghuguanli',
+					icon: 'ele-UserFilled',
 				},
 			},
 			{
@@ -165,7 +180,7 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 					isAffix: false,
 					isIframe: false,
 					roles: ['admin', 'common', 'others'],
-					icon: 'iconfont icon-gerenzhongxin',
+					icon: 'ele-Avatar',
 				},
 			}
 		],

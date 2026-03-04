@@ -19,6 +19,15 @@
 	--next-color-white: #ffffff;
 	--next-bg-main-color: #f8f8f8;
 	--next-bg-color: #f5f5ff;
+	--app-surface-0: #f3f4f6;
+	--app-surface-1: #ffffff;
+	--app-surface-2: #f9fafb;
+	--app-text-1: #111827;
+	--app-text-2: #6b7280;
+	--app-primary: #6a5cff;
+	--app-radius-xl: 18px;
+	--app-radius-lg: 14px;
+	--app-shadow-card: 0 12px 30px rgba(17, 24, 39, 0.08);
 	--next-border-color-light: #f1f2f3;
 	--next-color-primary-lighter: #ecf5ff;
 	--next-color-success-lighter: #f0f9eb;
@@ -67,13 +76,24 @@ body,
 
 	.layout-aside {
 		background: var(--next-bg-menuBar);
-		box-shadow: 2px 0 6px rgb(0 21 41 / 1%);
+		box-shadow: none;
 		height: inherit;
 		position: relative;
 		z-index: 1;
 		display: flex;
 		flex-direction: column;
 		overflow-x: hidden !important;
+		padding: 12px;
+
+		.el-menu {
+			border-right: none;
+		}
+
+		.el-menu-item,
+		.el-sub-menu__title {
+			border-radius: 10px;
+			margin-bottom: 4px;
+		}
 
 		.el-scrollbar__view {
 			overflow: hidden;
@@ -89,7 +109,7 @@ body,
 		padding: 0 !important;
 		overflow: hidden;
 		width: 100%;
-		background-color: var(--next-bg-main-color);
+		background-color: var(--app-surface-0);
 		display: flex;
 		flex-direction: column;
 
@@ -120,12 +140,13 @@ body,
 		}
 
 		&-view {
-			background: var(--el-color-white);
+			background: var(--app-surface-1);
 			width: 100%;
 			height: 100%;
-			border-radius: 4px;
+			border-radius: var(--app-radius-xl);
 			border: 1px solid var(--el-border-color-light, #ebeef5);
 			overflow: hidden;
+			box-shadow: var(--app-shadow-card);
 		}
 	}
 

@@ -100,33 +100,20 @@ router.beforeEach(async (to, from, next) => {
   NProgress.configure({ showSpinner: false });
   if (to.meta.title) NProgress.start();
   const token = Session.get('token');
-  
-  // 核心修复：扩展白名单，包含所有检测相关页面
-  const whiteList = [
-    '/imgPredict', 
-    '/cameraPredict', 
-    '/videoPredict',
-    '/imgRecord',
-    '/videoRecord',
-    '/cameraRecord',
-    '/login',
-    '/register'
-  ];
-  
+
+  // 仅登录/注册放行，其余业务页面均需登录
+  const whiteList = ['/login', '/register'];
+
   if (whiteList.includes(to.path)) {
-    // 白名单页面直接放行，不检查token
     next();
     NProgress.done();
     return;
   }
-	// 原有鉴权逻辑不变
+	// 鉴权逻辑
 	if (to.path === '/login' && !token) {
 		next();
 		NProgress.done();
 	} else if (to.path === '/register' && !token) {
-		next();
-		NProgress.done();
-	} else if (to.path === '/videoShow' && token) {
 		next();
 		NProgress.done();
 	}else {
@@ -135,7 +122,10 @@ router.beforeEach(async (to, from, next) => {
 			Session.clear();
 			NProgress.done();
 		} else if (token && to.path === '/login') {
-			next('/home');
+			next('/dashboard');
+			NProgress.done();
+		} else if (token && to.path === '/register') {
+			next('/dashboard');
 			NProgress.done();
 		} else {
 			const storesRoutesList = useRoutesList(pinia);
