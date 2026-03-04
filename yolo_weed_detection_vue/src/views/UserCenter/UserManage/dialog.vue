@@ -187,17 +187,37 @@ defineExpose({
 
 <style scoped lang="scss">
 :deep(.dia) {
-	width: 800px;
-	height: 650px;
+	width: 820px;
+	height: auto;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+
+	.el-dialog {
+		border-radius: 16px;
+		overflow: hidden;
+		box-shadow: 0 14px 34px rgba(17, 24, 39, 0.18);
+	}
+
+	.el-dialog__header {
+		margin-right: 0;
+		padding: 16px 20px;
+		border-bottom: 1px solid #eef2f7;
+	}
+
+	.el-dialog__body {
+		padding: 18px 20px 10px;
+	}
+
+	.el-dialog__footer {
+		padding: 10px 20px 16px;
+		border-top: 1px solid #eef2f7;
+	}
 }
 
 .el-form {
-	width: 80%;
-	margin-left: 10%;
+	width: 100%;
 }
 
 .imgs {
@@ -208,19 +228,32 @@ defineExpose({
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border: 1px dashed #d9d9d9;
-	border-radius: 6px;
+	border: 2px dashed #d1d5db;
+	border-radius: 10px;
 	cursor: pointer;
-	margin-left: 320px;
+	margin: 0 auto 20px;
 	margin-bottom: 20px;
 }
 
 .avatar-uploader .el-upload:hover {
-	border-color: #409eff;
+	border-color: #6366f1;
 }
 .avatar {
 	width: 120px;
 	height: 120px;
+	border-radius: 10px;
 	display: block;
+}
+
+.dialog-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+@media (max-width: 900px) {
+	:deep(.dia) {
+		width: 95vw;
+	}
 }
 </style>

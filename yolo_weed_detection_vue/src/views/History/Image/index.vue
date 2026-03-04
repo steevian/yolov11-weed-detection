@@ -1,7 +1,14 @@
 ﻿<template>
 	<div class="system-role-container layout-padding">
 		<div class="system-role-padding layout-padding-auto layout-padding-view">
-			<div class="system-user-search mb15">
+			<div class="history-title-row">
+				<div>
+					<h3 class="history-title">图像检测记录</h3>
+					<p class="history-subtitle">查看历史图像检测结果，支持按用户和识别结果筛选</p>
+				</div>
+			</div>
+
+			<div class="system-user-search action-card mb15">
 				<el-input v-model="state.tableData.param.search1" size="default" placeholder="请输入用户名"
 					style="max-width: 180px"> </el-input>
 				<el-input v-model="state.tableData.param.search2" size="default" placeholder="请输入识别结果"
@@ -24,7 +31,7 @@
 			</div>
 			
 			<!-- 调试面板 -->
-			<el-collapse v-model="activeDebugPanel" v-if="showDebugPanel" class="mt15">
+			<el-collapse v-model="activeDebugPanel" v-if="showDebugPanel" class="mt15 debug-collapse">
 				<el-collapse-item title="路径转换调试" name="1">
 					<el-table :data="state.tableData.data.slice(0, 3)" size="small">
 						<el-table-column prop="input_img" label="原始路径" width="200">
@@ -50,7 +57,7 @@
 				</el-collapse-item>
 			</el-collapse>
 			
-			<el-table :data="state.tableData.data" v-loading="state.tableData.loading" style="width: 100%">
+			<el-table :data="state.tableData.data" v-loading="state.tableData.loading" style="width: 100%" class="history-table">
 				<el-table-column type="expand">
 					<template #default="props">
 						<div m="4">
@@ -154,7 +161,7 @@
 			<el-pagination 
 				@size-change="onHandleSizeChange" 
 				@current-change="onHandleCurrentChange" 
-				class="mt15"
+				class="mt15 history-pagination"
 				:pager-count="5" 
 				:page-sizes="[10, 20, 30]" 
 				v-model:current-page="state.tableData.param.pageNum"
@@ -166,7 +173,7 @@
 			</el-pagination>
 			
 			<!-- 空数据提示 -->
-			<el-empty v-if="state.tableData.data.length === 0 && !state.tableData.loading" description="暂无检测记录" :image-size="200">
+			<el-empty v-if="state.tableData.data.length === 0 && !state.tableData.loading" class="history-empty" description="暂无检测记录" :image-size="200">
 				<template #image>
 					<el-icon size="100" color="#c0c4cc">
 						<ele-Picture />
@@ -606,16 +613,37 @@ onMounted(() => {
 <style scoped lang="scss">
 .system-role-container {
 	width: 100%;
-	height: 100vh;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
 
 	.system-role-padding {
-		padding: 15px;
+		padding: 16px;
 		height: 100%;
 		display: flex;
 		flex-direction: column;
+		gap: 12px;
+		overflow: auto;
 	}
+}
+
+.history-title-row {
+	width: 100%;
+	display: flex;
+	align-items: center;
+}
+
+.history-title {
+	font-size: 24px;
+	line-height: 1.25;
+	font-weight: 700;
+	color: var(--app-text-1, #111827);
+}
+
+.history-subtitle {
+	margin-top: 6px;
+	font-size: 13px;
+	color: var(--app-text-2, #6b7280);
 }
 
 .system-user-search {
@@ -623,16 +651,26 @@ onMounted(() => {
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 10px;
-	padding: 15px;
-	background: white;
-	border-radius: 8px;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	margin-bottom: 20px;
+	padding: 14px;
 	
 	.el-input {
 		flex: 1;
-		min-width: 200px;
+		min-width: 180px;
 	}
+}
+
+.action-card {
+	background: #fff;
+	border: 1px solid var(--el-border-color-light);
+	border-radius: 14px;
+	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+}
+
+.debug-collapse {
+	padding: 10px 12px;
+	background: #fff;
+	border: 1px solid var(--el-border-color-light);
+	border-radius: 12px;
 }
 
 .mb15 {
@@ -647,17 +685,22 @@ onMounted(() => {
 	margin-top: 15px;
 }
 
-.el-table {
+.history-table {
 	flex: 1;
-	background: white;
-	border-radius: 8px;
+	background: #fff;
+	border-radius: 12px;
 	overflow: hidden;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+	border: 1px solid var(--el-border-color-light);
 	
 	:deep(.el-table__row) {
 		&:hover {
-			background-color: #f5f7fa;
+			background-color: #eef2ff;
 		}
+	}
+
+	:deep(.el-table__cell) {
+		padding: 12px 0;
 	}
 	
 	:deep(.el-image) {
@@ -735,6 +778,14 @@ onMounted(() => {
 	}
 }
 
+.history-pagination {
+	padding: 8px 0 2px;
+}
+
+.history-empty {
+	padding: 18px 0 8px;
+}
+
 // 响应式适配
 @media (max-width: 768px) {
 	.system-user-search {
@@ -757,7 +808,7 @@ onMounted(() => {
 		}
 	}
 	
-	.el-table {
+	.history-table {
 		:deep(.el-table__cell) {
 			padding: 8px 0;
 		}

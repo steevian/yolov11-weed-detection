@@ -1,7 +1,14 @@
 ﻿<template>
 	<div class="system-role-container layout-padding">
 		<div class="system-role-padding layout-padding-auto layout-padding-view">
-			<div class="system-user-search mb15">
+			<div class="manage-title-row">
+				<div>
+					<h3 class="manage-title">用户管理</h3>
+					<p class="manage-subtitle">管理系统用户信息，支持筛选、添加、修改与删除</p>
+				</div>
+			</div>
+
+			<div class="system-user-search action-card mb15">
 				<el-input v-model="state.tableData.param.search" size="default" placeholder="请输入用户名" style="max-width: 180px"> </el-input>
 				<el-button size="default" type="primary" class="ml10" @click="getTableData()">
 					<el-icon>
@@ -16,7 +23,7 @@
 					添加
 				</el-button>
 			</div>
-			<el-table :data="state.tableData.data" v-loading="state.tableData.loading" style="width: 100%">
+			<el-table :data="state.tableData.data" v-loading="state.tableData.loading" style="width: 100%" class="manage-table">
 				<el-table-column prop="num" label="序号" width="80" align="center" />
 				<el-table-column prop="username" label="账号" show-overflow-tooltip width="100" align="center"></el-table-column>
 				<el-table-column prop="password" label="密码" width="100" align="center" />
@@ -27,7 +34,7 @@
 				<el-table-column prop="role" label="角色" show-overflow-tooltip align="center"></el-table-column>
 				<el-table-column prop="avatar" label="头像" align="center">
 					<template #default="scope">
-					  <img :src="scope.row.avatar || ''" width="70" height="70" />
+						<img class="avatar-img" :src="scope.row.avatar || ''" width="70" height="70" />
 					</template>
 				</el-table-column>
 				<el-table-column label="操作" width="150">
@@ -40,7 +47,7 @@
 			<el-pagination
 				@size-change="onHandleSizeChange"
 				@current-change="onHandleCurrentChange"
-				class="mt15"
+				class="mt15 manage-pagination"
 				:pager-count="5"
 				:page-sizes="[10, 20, 30]"
 				v-model:current-page="state.tableData.param.pageNum"
@@ -171,13 +178,100 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .system-role-container {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+
 	.system-role-padding {
-		background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
-		padding: 15px;
-		.el-table {
-			background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
-			flex: 1;
-		}
+		padding: 16px;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		overflow: auto;
+	}
+}
+
+.manage-title-row {
+	width: 100%;
+	display: flex;
+	align-items: center;
+}
+
+.manage-title {
+	font-size: 24px;
+	line-height: 1.25;
+	font-weight: 700;
+	color: var(--app-text-1, #111827);
+}
+
+.manage-subtitle {
+	margin-top: 6px;
+	font-size: 13px;
+	color: var(--app-text-2, #6b7280);
+}
+
+.system-user-search {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 10px;
+	padding: 14px;
+
+	.el-input {
+		flex: 1;
+		min-width: 180px;
+	}
+}
+
+.action-card {
+	background: #fff;
+	border: 1px solid var(--el-border-color-light);
+	border-radius: 14px;
+	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+}
+
+.manage-table {
+	flex: 1;
+	background: #fff;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+	border: 1px solid var(--el-border-color-light);
+
+	:deep(.el-table__row:hover) {
+		background-color: #eef2ff;
+	}
+
+	:deep(.el-table__cell) {
+		padding: 12px 0;
+	}
+}
+
+.avatar-img {
+	border-radius: 10px;
+	border: 1px solid #e5e7eb;
+	object-fit: cover;
+}
+
+.manage-pagination {
+	padding: 8px 0 2px;
+}
+
+@media (max-width: 900px) {
+	.system-user-search {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.system-user-search .el-button {
+		width: 100%;
+		margin-left: 0 !important;
+	}
+
+	.manage-table :deep(.el-table__cell) {
+		padding: 8px 0;
 	}
 }
 </style>

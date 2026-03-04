@@ -401,3 +401,47 @@ body,
 		padding-left: #{$i}px !important;
 	}
 }
+
+/* 工作台统一样式助手
+------------------------------- */
+.workbench-title-row {
+	width: 100%;
+	display: flex;
+	align-items: center;
+}
+
+.workbench-title {
+	font-size: 24px;
+	line-height: 1.25;
+	font-weight: 700;
+	color: var(--app-text-1);
+}
+
+.workbench-subtitle {
+	margin-top: 6px;
+	font-size: 13px;
+	color: var(--app-text-2);
+}
+
+.workbench-action-card {
+	background: #fff;
+	border: 1px solid var(--el-border-color-light);
+	border-radius: var(--app-radius-lg);
+	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+}
+
+.workbench-table-card {
+	background: #fff;
+	border: 1px solid var(--el-border-color-light);
+	border-radius: 12px;
+	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+	overflow: hidden;
+}
+
+.workbench-pagination {
+	padding: 8px 0 2px;
+}
+
+:root {
+	--el-border-radius-base: 10px;
+}

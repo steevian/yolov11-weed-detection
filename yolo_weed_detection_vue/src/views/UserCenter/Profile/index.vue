@@ -1,11 +1,17 @@
 ﻿<template>
 	<div class="system-role-container layout-padding">
-	<div class="system-role-dialog-container">
-		<el-card shadow="hover" header="个人信息" class="cards">
-			<el-form ref="roleDialogFormRef" :model="state.form" size="default" label-width="100px">
-				<el-row :gutter="35">
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="头像：">
+		<div class="system-role-dialog-container">
+			<div class="profile-title-row">
+				<div>
+					<h3 class="profile-title">个人中心</h3>
+					<p class="profile-subtitle">维护头像与基础信息，提交后立即生效</p>
+				</div>
+			</div>
+
+			<el-card shadow="never" class="cards">
+				<el-form ref="roleDialogFormRef" :model="state.form" size="default" label-width="92px" class="profile-form">
+					<div class="avatar-row">
+						<el-form-item label="头像">
 							<div class="imgs">
 								<el-upload
 									v-model="state.form.avatar"
@@ -20,48 +26,52 @@
 								</el-upload>
 							</div>
 						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="账号" style="color: #000">
-							<el-input v-model="state.form.username" placeholder="请输入账号" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="密码">
-							<el-input v-model="state.form.password" placeholder="请输入密码" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="姓名">
-							<el-input v-model="state.form.name" placeholder="请输入姓名" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="性别">
-							<el-input v-model="state.form.sex" placeholder="请输入性别" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="Email">
-							<el-input v-model="state.form.email" placeholder="请输入Email" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="手机号码">
-							<el-input v-model="state.form.tel" placeholder="请输入手机号码" clearable></el-input>
-						</el-form-item>
-					</el-col>
-					<el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24" class="mb20">
-						<el-form-item label="角色">
-							<el-input v-model="state.form.role" disabled placeholder="请输入角色" clearable></el-input>
-						</el-form-item>
-					</el-col>
-				</el-row>
-			</el-form>
-			<el-button type="primary" @click="upData" size="default" style="float: right;margin-right: 15%;">确认修改</el-button>
-		</el-card>
+					</div>
+
+					<el-row :gutter="16">
+						<el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="mb20">
+							<el-form-item label="账号">
+								<el-input v-model="state.form.username" placeholder="请输入账号" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="mb20">
+							<el-form-item label="密码">
+								<el-input v-model="state.form.password" placeholder="请输入密码" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="mb20">
+							<el-form-item label="姓名">
+								<el-input v-model="state.form.name" placeholder="请输入姓名" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="mb20">
+							<el-form-item label="性别">
+								<el-input v-model="state.form.sex" placeholder="请输入性别" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="mb20">
+							<el-form-item label="Email">
+								<el-input v-model="state.form.email" placeholder="请输入Email" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="mb20">
+							<el-form-item label="手机号码">
+								<el-input v-model="state.form.tel" placeholder="请输入手机号码" clearable></el-input>
+							</el-form-item>
+						</el-col>
+						<el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="mb20">
+							<el-form-item label="角色">
+								<el-input v-model="state.form.role" disabled placeholder="请输入角色" clearable></el-input>
+							</el-form-item>
+						</el-col>
+					</el-row>
+				</el-form>
+				<div class="form-footer">
+					<el-button type="primary" @click="upData" size="default">确认修改</el-button>
+				</div>
+			</el-card>
+		</div>
 	</div>
-</div>
 </template>
 
 <script setup lang="ts" name="personal">
@@ -154,25 +164,47 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .system-role-container {
-	display: flex;
-	align-items: center;
-	background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
-}
-.system-role-dialog-container{
-	width: 60%;
-}
-
-.cards{
-	background: radial-gradient(circle, #d3e3f1 0%, #ffffff 100%);
-	border-radius: 10px;
+	width: 100%;
+	height: 100%;
 	display: flex;
 	flex-direction: column;
+}
+
+.system-role-dialog-container {
+	width: min(1100px, 100%);
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.profile-title-row {
+	width: 100%;
+	display: flex;
 	align-items: center;
 }
 
-.el-form {
-	width: 75%;
-	margin-left: 10%;
+.profile-title {
+	font-size: 24px;
+	line-height: 1.25;
+	font-weight: 700;
+	color: var(--app-text-1, #111827);
+}
+
+.profile-subtitle {
+	margin-top: 6px;
+	font-size: 13px;
+	color: var(--app-text-2, #6b7280);
+}
+
+.cards {
+	background: #fff;
+	border-radius: 14px;
+	border: 1px solid var(--el-border-color-light);
+	box-shadow: 0 10px 28px rgba(17, 24, 39, 0.06);
+}
+
+.profile-form {
+	width: 100%;
 }
 
 .imgs {
@@ -183,18 +215,44 @@ onMounted(() => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border: 1px dashed #d9d9d9;
-	border-radius: 6px;
+	border: 2px dashed #d1d5db;
+	border-radius: 10px;
 	cursor: pointer;
-	margin-bottom: 20px;
+	margin-bottom: 4px;
+}
+
+.avatar-row {
+	display: flex;
+	justify-content: flex-start;
+}
+
+.form-footer {
+	display: flex;
+	justify-content: flex-end;
+	margin-top: 6px;
 }
 
 .avatar-uploader .el-upload:hover {
-	border-color: #409eff;
+	border-color: #6366f1;
 }
 .avatar {
 	width: 120px;
 	height: 120px;
+	border-radius: 10px;
 	display: block;
+}
+
+@media (max-width: 900px) {
+	.system-role-dialog-container {
+		width: 100%;
+	}
+
+	.form-footer {
+		justify-content: stretch;
+	}
+
+	.form-footer .el-button {
+		width: 100%;
+	}
 }
 </style>
