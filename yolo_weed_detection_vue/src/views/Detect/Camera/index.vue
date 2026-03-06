@@ -1,7 +1,15 @@
 ﻿<template>
 	<div class="system-predict-container layout-padding">
 		<div class="system-predict-padding layout-padding-auto layout-padding-view">
-			<div class="header">
+      <div class="detect-title-row">
+        <div>
+          <h3 class="detect-title">摄像检测</h3>
+          <p class="detect-subtitle">开启摄像头后执行 YOLOv11 实时检测，结果与检测框同步展示</p>
+        </div>
+      </div>
+
+      <el-card shadow="never" class="action-card">
+        <div class="header action-row">
 				<div class="conf" style="display: flex; flex-direction: row; align-items: center;">
 					<div style="font-size: 14px; margin-right: 20px; color: #909399;">
 						设置最小置信度阈值
@@ -45,7 +53,8 @@
 						<span>{{ progressText }} {{ progressPercentage }}%</span>
 					</el-progress>
 				</div>
-			</div>
+        </div>
+      </el-card>
 			<div class="cards" ref="cardsContainer">
 				<!-- 使用img标签显示MJPEG流，绑定ref和加载事件 -->
 				<img 
@@ -80,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onActivated, onDeactivated, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onActivated, onDeactivated, onUnmounted, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { VideoCamera } from '@element-plus/icons-vue';
 import request from '@/utils/request';
@@ -116,9 +125,15 @@ const cameraStatusType = ref<CameraStatusType>('info'); // 状态类型
 // ============================ 用户信息与环境 ============================
 const userStore = useUserInfo();
 const { userInfos } = storeToRefs(userStore);
-const currentHost = window.location.hostname;
 // 防抖标识
 let isRequesting = ref<boolean>(false);
+
+const runOptionalGC = (): void => {
+  const maybeGc = (window as Window & { gc?: () => void }).gc;
+  if (typeof maybeGc === 'function') {
+    maybeGc();
+  }
+};
 
 // ============================ 表单数据 ============================
 const formData = ref<FormData>({
@@ -157,9 +172,7 @@ const resetCameraState = (): void => {
   }
   
   // 提示垃圾回收
-  if (typeof window.gc === 'function') {
-    window.gc();
-  }
+  runOptionalGC();
 };
 
 // ============================ 权限检查 ============================
@@ -348,7 +361,6 @@ const stopCamera = async (): Promise<void> => {
         cancelButtonText: '取消',
         type: 'warning',
         closeOnClickModal: false,
-        timeout: 30000
       }
     );
     
@@ -393,9 +405,7 @@ const stopCamera = async (): Promise<void> => {
       // 确保状态完全重置
       resetCameraState();
       // 清理内存
-      if (typeof window.gc === 'function') {
-        window.gc();
-      }
+      runOptionalGC();
     }, 500);
     
   } catch (error: any) {
@@ -553,9 +563,8 @@ onUnmounted(() => {
 
 // ============================ 监听置信度变化 ============================
 // 监听置信度变化，实时更新表单数据
-const confWatcher = computed(() => {
+watch(conf, () => {
   formData.value.conf = conf.value / 100;
-  return conf.value;
 });
 </script>
 
@@ -573,6 +582,30 @@ const confWatcher = computed(() => {
     display: flex;
     flex-direction: column;
   }
+}
+
+.detect-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+
+  .detect-title {
+    margin: 0;
+    font-size: 20px;
+    color: #1f2937;
+  }
+
+  .detect-subtitle {
+    margin: 6px 0 0;
+    color: #64748b;
+    font-size: 14px;
+  }
+}
+
+.action-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
 }
 
 .header {

@@ -91,7 +91,6 @@ export default {
 		dropdownLarge: '大型',
 		dropdownDefault: '默認',
 		dropdownSmall: '小型',
-		dropdown1: '首頁',
 		dropdown2: '個人中心',
 		dropdown3: '404',
 		dropdown4: '401',

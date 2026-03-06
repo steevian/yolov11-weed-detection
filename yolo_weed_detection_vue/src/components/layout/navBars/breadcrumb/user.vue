@@ -51,7 +51,7 @@
 			</span>
 			<template #dropdown>
 				<el-dropdown-menu>
-					<el-dropdown-item command="/">{{ $t('message.user.dropdown1') }}</el-dropdown-item>
+					<el-dropdown-item command="/personal">{{ $t('message.user.dropdown2') }}</el-dropdown-item>
 					<el-dropdown-item divided command="logOut">{{ $t('message.user.dropdown5') }}</el-dropdown-item>
 				</el-dropdown-menu>
 			</template>
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts" name="layoutBreadcrumbUser">
-import { defineAsyncComponent, ref, computed, reactive, onMounted } from 'vue';
+import { defineAsyncComponent, ref, computed, reactive, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessageBox, ElMessage } from 'element-plus';
 import { useI18n } from 'vue-i18n';
@@ -94,6 +94,10 @@ const state = reactive({
 });
 
 let username: string = '';
+
+const onScreenfullChange = () => {
+	state.isScreenfull = screenfull.isFullscreen;
+};
 
 // 设置分割样式
 const layoutUserFlexNum = computed(() => {
@@ -165,10 +169,6 @@ const onScreenfullClick = () => {
 		return false;
 	}
 	screenfull.toggle();
-	screenfull.on('change', () => {
-		if (screenfull.isFullscreen) state.isScreenfull = true;
-		else state.isScreenfull = false;
-	});
 };
 // 语言切换
 const onLanguageChange = (lang: string) => {
@@ -201,9 +201,18 @@ onMounted(() => {
 	// console.log(userInfos.value);
 	username = userInfos.value.userName
 	getTableData();
+	if (screenfull.isEnabled) {
+		screenfull.on('change', onScreenfullChange);
+	}
 	if (Local.get('themeConfig')) {
 		initI18nOrSize('globalComponentSize', 'disabledSize');
 		initI18nOrSize('globalI18n', 'disabledI18n');
+	}
+});
+
+onUnmounted(() => {
+	if (screenfull.isEnabled) {
+		screenfull.off('change', onScreenfullChange);
 	}
 });
 
