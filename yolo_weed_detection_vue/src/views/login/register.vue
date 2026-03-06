@@ -1,10 +1,8 @@
 <template>
 	<div class="register-page">
 		<div class="starry-bg" aria-hidden="true">
-			<div class="stars-layer"></div>
-			<div class="stars-layer stars-layer-2"></div>
-			<div class="meteor meteor-a"></div>
-			<div class="meteor meteor-b"></div>
+			<div class="stars-layer" ref="starsLayerRef"></div>
+			<div class="meteors-layer" ref="meteorsLayerRef"></div>
 		</div>
 
 		<div class="container">
@@ -12,10 +10,50 @@
 				<div class="left-content">
 					<h3 class="left-title">基于YOLOV11的杂草检测系统</h3>
 					<div class="cartoon-group">
-						<div class="character orange"></div>
-						<div class="character purple"></div>
-						<div class="character black"></div>
-						<div class="character yellow"></div>
+						<div class="character orange">
+							<div class="arms">
+								<div class="arm left"></div>
+								<div class="arm right"></div>
+							</div>
+							<div class="eyes">
+								<div class="eye"><div class="pupil"></div></div>
+								<div class="eye"><div class="pupil"></div></div>
+							</div>
+							<div class="mouth smile"></div>
+						</div>
+
+						<div class="character purple">
+							<div class="arms">
+								<div class="arm left"></div>
+								<div class="arm right"></div>
+							</div>
+							<div class="eyes">
+								<div class="eye"><div class="pupil"></div></div>
+								<div class="eye"><div class="pupil"></div></div>
+							</div>
+							<div class="mouth smile"></div>
+						</div>
+
+						<div class="character black">
+							<div class="arms">
+								<div class="arm left"></div>
+								<div class="arm right"></div>
+							</div>
+							<div class="eyes">
+								<div class="eye"><div class="pupil"></div></div>
+								<div class="eye"><div class="pupil"></div></div>
+							</div>
+							<div class="mouth smile"></div>
+						</div>
+
+						<div class="character yellow">
+							<div class="arms">
+								<div class="arm left"></div>
+								<div class="arm right"></div>
+							</div>
+							<div class="eye single"><div class="pupil"></div></div>
+							<div class="mouth flat"></div>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -58,7 +96,7 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import type { FormInstance, FormRules } from 'element-plus';
@@ -66,6 +104,11 @@ import request from '@/utils/request';
 
 const router = useRouter();
 const ruleFormRef = ref<FormInstance>();
+const starsLayerRef = ref<HTMLElement | null>(null);
+const meteorsLayerRef = ref<HTMLElement | null>(null);
+
+let meteorTimer: number | null = null;
+let resizeTimer: number | null = null;
 
 const ruleForm = reactive({
 	username: '',
@@ -115,15 +158,110 @@ const submitForm = (formEl: FormInstance | undefined) => {
 		}
 	});
 };
+
+const createStars = () => {
+	const starsLayer = starsLayerRef.value;
+	if (!starsLayer) return;
+	const width = window.innerWidth;
+	const height = window.innerHeight;
+	const area = width * height;
+	const count = Math.max(140, Math.min(320, Math.floor(area / 7800)));
+
+	starsLayer.innerHTML = '';
+	for (let index = 0; index < count; index++) {
+		const star = document.createElement('span');
+		const size = 1 + Math.random() * 4.3;
+		const minOpacity = 0.4 + Math.random() * 0.3;
+		const maxOpacity = 0.82 + Math.random() * 0.18;
+		const duration = 2 + Math.random() * 4;
+		const delay = -Math.random() * 6;
+
+		star.className = 'star';
+		if (size >= 3.3 && Math.random() > 0.35) {
+			star.classList.add('glow');
+		}
+		star.style.left = `${Math.random() * 100}%`;
+		star.style.top = `${Math.random() * 100}%`;
+		star.style.width = `${size.toFixed(2)}px`;
+		star.style.height = `${size.toFixed(2)}px`;
+		star.style.animationName = Math.random() > 0.5 ? 'twinkleA' : 'twinkleB';
+		star.style.animationDuration = `${duration.toFixed(2)}s`;
+		star.style.animationDelay = `${delay.toFixed(2)}s`;
+		star.style.setProperty('--twinkle-min', minOpacity.toFixed(2));
+		star.style.setProperty('--twinkle-max', Math.min(1, maxOpacity).toFixed(2));
+		starsLayer.appendChild(star);
+	}
+};
+
+const spawnMeteor = () => {
+	const meteorsLayer = meteorsLayerRef.value;
+	if (!meteorsLayer) return;
+
+	const meteor = document.createElement('span');
+	const startX = -100 + Math.random() * (window.innerWidth * 0.52);
+	const startY = window.innerHeight * (0.52 + Math.random() * 0.44);
+	const distance = 280 + Math.random() * 460;
+	const angle = -28 - Math.random() * 30;
+	const duration = 2 + Math.random();
+	const length = 120 + Math.random() * 150;
+
+	meteor.className = 'meteor';
+	meteor.style.left = `${startX}px`;
+	meteor.style.top = `${startY}px`;
+	meteor.style.setProperty('--meteor-dx', `${distance.toFixed(1)}px`);
+	meteor.style.setProperty('--meteor-dy', `${(-distance).toFixed(1)}px`);
+	meteor.style.setProperty('--meteor-angle', `${angle.toFixed(1)}deg`);
+	meteor.style.setProperty('--meteor-duration', `${duration.toFixed(2)}s`);
+	meteor.style.setProperty('--meteor-length', `${length.toFixed(1)}px`);
+
+	meteorsLayer.appendChild(meteor);
+	window.setTimeout(() => meteor.remove(), duration * 1000 + 120);
+};
+
+const scheduleMeteor = () => {
+	if (meteorTimer) {
+		window.clearTimeout(meteorTimer);
+	}
+	const delay = 3000 + Math.random() * 5000;
+	meteorTimer = window.setTimeout(() => {
+		spawnMeteor();
+		scheduleMeteor();
+	}, delay);
+};
+
+const onResize = () => {
+	if (resizeTimer) {
+		window.clearTimeout(resizeTimer);
+	}
+	resizeTimer = window.setTimeout(() => {
+		createStars();
+	}, 220);
+};
+
+onMounted(() => {
+	createStars();
+	scheduleMeteor();
+	window.addEventListener('resize', onResize);
+});
+
+onUnmounted(() => {
+	window.removeEventListener('resize', onResize);
+	if (meteorTimer) window.clearTimeout(meteorTimer);
+	if (resizeTimer) window.clearTimeout(resizeTimer);
+});
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap');
+
 .register-page {
+	margin: 0;
 	min-height: 100vh;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	background: transparent;
+	font-family: 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
 	padding: 24px;
 	position: relative;
 	overflow: hidden;
@@ -139,42 +277,87 @@ const submitForm = (formEl: FormInstance | undefined) => {
 	background: linear-gradient(to bottom, #0a0a1a 0%, #12122b 100%);
 }
 
-.stars-layer {
+.stars-layer,
+.meteors-layer {
 	position: absolute;
-	inset: -20%;
-	background-image: radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0)), radial-gradient(1.6px 1.6px at 72% 22%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0)), radial-gradient(2.3px 2.3px at 38% 78%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0)), radial-gradient(1.4px 1.4px at 82% 67%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0)), radial-gradient(2px 2px at 52% 48%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
-	background-size: 460px 460px;
-	animation: twinkle 8.5s ease-in-out infinite alternate;
+	inset: 0;
+	overflow: hidden;
 }
 
-.stars-layer-2 {
-	opacity: 0.7;
-	filter: blur(0.4px);
-	animation-duration: 11s;
-	animation-direction: alternate-reverse;
+:deep(.star) {
+	position: absolute;
+	border-radius: 50%;
+	background: #f0f0f0;
+	animation-timing-function: ease-in-out;
+	animation-iteration-count: infinite;
+	animation-direction: alternate;
+	will-change: opacity;
 }
 
-.meteor {
+:deep(.star.glow) {
+	box-shadow: 0 0 12px 4px rgba(255, 255, 255, 0.55), 0 0 32px 8px rgba(255, 255, 255, 0.18);
+}
+
+@keyframes twinkleA {
+	0%,
+	100% {
+		opacity: var(--twinkle-min, 0.4);
+	}
+	50% {
+		opacity: var(--twinkle-max, 1);
+	}
+}
+
+@keyframes twinkleB {
+	0%,
+	100% {
+		opacity: var(--twinkle-max, 1);
+	}
+	50% {
+		opacity: var(--twinkle-min, 0.4);
+	}
+}
+
+:deep(.meteor) {
 	position: absolute;
-	width: 180px;
+	width: var(--meteor-length, 170px);
 	height: 2px;
+	background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(240, 240, 240, 0.75) 58%, #ffffff 100%);
 	border-radius: 999px;
-	background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(243, 244, 255, 0.8) 58%, #ffffff 100%);
-	filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.52));
-	transform: rotate(-38deg);
-	opacity: 0;
-	animation: meteorFly 6.2s linear infinite;
+	transform-origin: center left;
+	filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+	animation: meteorFly var(--meteor-duration, 1.4s) linear forwards;
+	will-change: transform, opacity;
 }
 
-.meteor-a {
-	left: 12%;
-	top: 72%;
+:deep(.meteor::after) {
+	content: '';
+	position: absolute;
+	right: -2px;
+	top: 50%;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: #ffffff;
+	transform: translateY(-50%);
+	box-shadow: 0 0 6px rgba(255, 255, 255, 0.72);
 }
 
-.meteor-b {
-	left: 38%;
-	top: 86%;
-	animation-delay: 2.8s;
+@keyframes meteorFly {
+	0% {
+		opacity: 0;
+		transform: translate3d(0, 0, 0) rotate(var(--meteor-angle, -45deg)) scaleX(0.72);
+	}
+	10% {
+		opacity: 1;
+	}
+	90% {
+		opacity: 0.95;
+	}
+	100% {
+		opacity: 0;
+		transform: translate3d(var(--meteor-dx, 320px), var(--meteor-dy, -320px), 0) rotate(var(--meteor-angle, -45deg)) scaleX(1);
+	}
 }
 
 .container {
@@ -228,6 +411,16 @@ const submitForm = (formEl: FormInstance | undefined) => {
 }
 
 .character {
+	--lookX: 0px;
+	--lookBend: 0deg;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	transform-origin: bottom center;
+	transform: translateX(var(--lookX)) skewX(var(--lookBend));
+	transition: transform 0.3s ease-out;
 	animation: idleFloat 3.6s ease-in-out infinite;
 }
 
@@ -260,6 +453,75 @@ const submitForm = (formEl: FormInstance | undefined) => {
 	border-radius: 35px;
 	background: #ffd000;
 	animation-delay: 0.28s;
+}
+
+.arms {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	padding: 0 8px;
+	pointer-events: none;
+}
+
+.arm {
+	width: 15px;
+	height: 50px;
+	background: inherit;
+	border-radius: 10px;
+	transform-origin: top center;
+	transition: transform 0.3s ease;
+	animation: wave 1.6s ease-in-out infinite;
+}
+
+.arm.right {
+	animation-direction: reverse;
+}
+
+.eyes {
+	display: flex;
+	gap: 12px;
+	margin-top: 25px;
+}
+
+.eye {
+	width: 14px;
+	height: 14px;
+	background: #ffffff;
+	border-radius: 50%;
+	position: relative;
+}
+
+.eye.single {
+	margin-top: 35px;
+	margin-left: 0;
+}
+
+.pupil {
+	width: 6px;
+	height: 6px;
+	background: #171717;
+	border-radius: 50%;
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	transition: transform 0.15s ease;
+}
+
+.mouth {
+	width: 12px;
+	height: 4px;
+	margin-top: 12px;
+	background: #111;
+}
+
+.smile {
+	border-radius: 0 0 10px 10px;
+}
+
+.flat {
+	width: 16px;
 }
 
 .register-panel {
@@ -356,38 +618,6 @@ const submitForm = (formEl: FormInstance | undefined) => {
 	color: #1e2355;
 }
 
-@keyframes twinkle {
-	0% {
-		opacity: 0.48;
-	}
-	50% {
-		opacity: 0.96;
-	}
-	100% {
-		opacity: 0.56;
-	}
-}
-
-@keyframes meteorFly {
-	0% {
-		opacity: 0;
-		transform: translate3d(0, 0, 0) rotate(-38deg) scaleX(0.72);
-	}
-	12% {
-		opacity: 0;
-	}
-	20% {
-		opacity: 1;
-	}
-	80% {
-		opacity: 0.94;
-	}
-	100% {
-		opacity: 0;
-		transform: translate3d(340px, -320px, 0) rotate(-38deg) scaleX(1);
-	}
-}
-
 @keyframes idleFloat {
 	0%,
 	100% {
@@ -398,6 +628,16 @@ const submitForm = (formEl: FormInstance | undefined) => {
 	}
 }
 
+@keyframes wave {
+	0%,
+	100% {
+		transform: rotate(0deg);
+	}
+	50% {
+		transform: rotate(16deg);
+	}
+}
+
 @media (max-width: 900px) {
 	.container {
 		grid-template-columns: 1fr;
@@ -405,7 +645,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
 	}
 
 	.left-panel {
-		min-height: 320px;
+		min-height: 380px;
 	}
 
 	.left-content {
@@ -413,11 +653,33 @@ const submitForm = (formEl: FormInstance | undefined) => {
 	}
 
 	.cartoon-group {
-		transform: translate(0, 20px);
+		transform: translate(0, 12px);
 	}
 
 	.register-panel {
 		padding: 30px;
+	}
+}
+</style>
+
+<style>
+@keyframes twinkleA {
+	0%,
+	100% {
+		opacity: var(--twinkle-min, 0.4);
+	}
+	50% {
+		opacity: var(--twinkle-max, 1);
+	}
+}
+
+@keyframes twinkleB {
+	0%,
+	100% {
+		opacity: var(--twinkle-max, 1);
+	}
+	50% {
+		opacity: var(--twinkle-min, 0.4);
 	}
 }
 </style>

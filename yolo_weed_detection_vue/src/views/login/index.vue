@@ -428,7 +428,7 @@ onUnmounted(() => {
 	overflow: hidden;
 }
 
-.star {
+:deep(.star) {
 	position: absolute;
 	border-radius: 50%;
 	background: #f0f0f0;
@@ -438,7 +438,7 @@ onUnmounted(() => {
 	will-change: opacity;
 }
 
-.star.glow {
+:deep(.star.glow) {
 	box-shadow: 0 0 12px 4px rgba(255, 255, 255, 0.55), 0 0 32px 8px rgba(255, 255, 255, 0.18);
 }
 
@@ -462,7 +462,7 @@ onUnmounted(() => {
 	}
 }
 
-.meteor {
+:deep(.meteor) {
 	position: absolute;
 	width: var(--meteor-length, 170px);
 	height: 2px;
@@ -474,7 +474,7 @@ onUnmounted(() => {
 	will-change: transform, opacity;
 }
 
-.meteor::after {
+:deep(.meteor::after) {
 	content: '';
 	position: absolute;
 	right: -2px;
@@ -895,6 +895,28 @@ onUnmounted(() => {
 
 	.login {
 		padding: 32px;
+	}
+}
+</style>
+
+<style>
+@keyframes twinkleA {
+	0%,
+	100% {
+		opacity: var(--twinkle-min, 0.4);
+	}
+	50% {
+		opacity: var(--twinkle-max, 1);
+	}
+}
+
+@keyframes twinkleB {
+	0%,
+	100% {
+		opacity: var(--twinkle-max, 1);
+	}
+	50% {
+		opacity: var(--twinkle-min, 0.4);
 	}
 }
 </style>
