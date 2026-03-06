@@ -3,7 +3,6 @@
 		<Logo v-if="setIsShowLogo" />
 		<Breadcrumb />
 		<Horizontal :menuList="state.menuList" v-if="isLayoutTransverse" />
-		<User />
 	</div>
 </template>
 
@@ -17,7 +16,6 @@ import mittBus from '@/utils/mitt';
 
 // 引入组件
 const Breadcrumb = defineAsyncComponent(() => import('@/components/layout/navBars/breadcrumb/breadcrumb.vue'));
-const User = defineAsyncComponent(() => import('@/components/layout/navBars/breadcrumb/user.vue'));
 const Logo = defineAsyncComponent(() => import('@/components/layout/logo/index.vue'));
 const Horizontal = defineAsyncComponent(() => import('@/components/layout/navMenu/horizontal.vue'));
 

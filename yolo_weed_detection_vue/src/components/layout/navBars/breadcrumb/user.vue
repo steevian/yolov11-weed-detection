@@ -12,7 +12,7 @@
 				</el-dropdown-menu>
 			</template>
 		</el-dropdown>
-		<div class="layout-navbars-breadcrumb-user-icon" @click="onSearchClick">
+		<div class="layout-navbars-breadcrumb-user-icon toolbar-search-icon" @click="onSearchClick">
 			<el-icon :title="$t('message.user.title2')">
 				<ele-Search />
 			</el-icon>
@@ -205,6 +205,10 @@ onMounted(() => {
 		initI18nOrSize('globalComponentSize', 'disabledSize');
 		initI18nOrSize('globalI18n', 'disabledI18n');
 	}
+});
+
+defineExpose({
+	openSearch: onSearchClick,
 });
 </script>
 
