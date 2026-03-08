@@ -16,12 +16,17 @@
 						</el-select>
 					</el-form-item>
 					<el-form-item>
+						<el-checkbox v-model="showMetrics">指标卡</el-checkbox>
+						<el-checkbox v-model="showProgress" class="ml10">进度条</el-checkbox>
+						<el-checkbox v-model="showEpochTable" class="ml10">轮次表格</el-checkbox>
+					</el-form-item>
+					<el-form-item>
 						<el-button type="primary" @click="loadMonitor">刷新监控</el-button>
 					</el-form-item>
 				</el-form>
 			</el-card>
 
-			<div class="monitor-cards mb15">
+			<div class="monitor-cards mb15" v-if="showMetrics">
 				<el-card>
 					<div class="metric-title">训练状态</div>
 					<div class="metric-value">{{ overview.status || '-' }}</div>
@@ -40,14 +45,14 @@
 				</el-card>
 			</div>
 
-			<el-card class="mb15">
+			<el-card class="mb15" v-if="showProgress">
 				<template #header>
 					<span>整体进度</span>
 				</template>
 				<el-progress :percentage="overview.progress || 0" :stroke-width="18" status="success" />
 			</el-card>
 
-			<el-card>
+			<el-card v-if="showEpochTable">
 				<template #header>
 					<div class="card-header-row">
 						<span>轮次指标</span>
@@ -62,12 +67,21 @@
 					<el-table-column prop="map50" label="mAP50" min-width="120" />
 				</el-table>
 			</el-card>
+
+			<el-card class="mt15">
+				<template #header>最近 3 轮快照</template>
+				<el-descriptions :column="3" border>
+					<el-descriptions-item v-for="item in recentEpochs" :key="item.epoch" :label="`Epoch ${item.epoch}`">
+						P {{ formatDecimal(item.precision) }} / R {{ formatDecimal(item.recall) }} / mAP {{ formatDecimal(item.map50) }}
+					</el-descriptions-item>
+				</el-descriptions>
+			</el-card>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts" name="trainMonitorPage">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useTrainApi } from '@/api/train';
 
@@ -77,6 +91,14 @@ const taskOptions = ref<any[]>([]);
 const currentTaskId = ref('');
 const overview = ref<Record<string, any>>({});
 const epochs = ref<any[]>([]);
+const showMetrics = ref(true);
+const showProgress = ref(true);
+const showEpochTable = ref(true);
+
+const recentEpochs = computed(() => {
+	if (!epochs.value.length) return [];
+	return [...epochs.value].slice(-3).reverse();
+});
 
 const formatDecimal = (val: number | string | undefined) => {
 	if (val === undefined || val === null || val === '') return '-';

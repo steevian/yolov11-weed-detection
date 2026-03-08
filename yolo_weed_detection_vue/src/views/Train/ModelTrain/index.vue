@@ -49,7 +49,7 @@
 						<el-tag type="warning">placeholder</el-tag>
 					</div>
 				</template>
-				<el-table :data="tasks" v-loading="loading" style="width: 100%">
+				<el-table :data="tasks" v-loading="loading" style="width: 100%" @row-click="onSelectTask" row-key="taskId" highlight-current-row>
 					<el-table-column prop="taskId" label="任务ID" min-width="140" />
 					<el-table-column prop="taskName" label="任务名称" min-width="180" />
 					<el-table-column prop="modelType" label="模型" min-width="100" />
@@ -57,6 +57,34 @@
 					<el-table-column prop="status" label="状态" min-width="100" />
 					<el-table-column prop="createdAt" label="创建时间" min-width="180" />
 				</el-table>
+			</el-card>
+
+			<el-card class="mt15" v-if="selectedTask">
+				<template #header>
+					<div class="card-header-row">
+						<span>任务详情 - {{ selectedTask.taskName }}</span>
+						<el-tag type="info">{{ selectedTask.status || 'unknown' }}</el-tag>
+					</div>
+				</template>
+				<div class="detail-metrics">
+					<el-card>
+						<div class="metric-title">当前轮次</div>
+						<div class="metric-value">{{ monitorOverview.currentEpoch || 0 }} / {{ monitorOverview.totalEpoch || 0 }}</div>
+					</el-card>
+					<el-card>
+						<div class="metric-title">mAP50</div>
+						<div class="metric-value">{{ toFixedSafe(monitorOverview.map50) }}</div>
+					</el-card>
+					<el-card>
+						<div class="metric-title">Precision</div>
+						<div class="metric-value">{{ toFixedSafe(monitorOverview.precision) }}</div>
+					</el-card>
+					<el-card>
+						<div class="metric-title">Recall</div>
+						<div class="metric-value">{{ toFixedSafe(monitorOverview.recall) }}</div>
+					</el-card>
+				</div>
+				<el-progress class="mt15" :percentage="monitorOverview.progress || 0" :stroke-width="16" />
 			</el-card>
 		</div>
 	</div>
@@ -66,11 +94,14 @@
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useTrainApi } from '@/api/train';
+import { toFixedSafe } from '@/views/Train/utils';
 
 const trainApi = useTrainApi();
 const loading = ref(false);
 const submitting = ref(false);
 const tasks = ref<any[]>([]);
+const selectedTask = ref<any>(null);
+const monitorOverview = ref<Record<string, any>>({});
 
 const form = reactive({
 	taskName: 'weed-train-v1',
@@ -87,10 +118,23 @@ const loadTasks = async () => {
 	try {
 		const res = await trainApi.getTrainTasks();
 		tasks.value = res?.data?.tasks || [];
+		if (!selectedTask.value && tasks.value.length > 0) {
+			await onSelectTask(tasks.value[0]);
+		}
 	} catch (error) {
 		ElMessage.error('获取训练任务失败');
 	} finally {
 		loading.value = false;
+	}
+};
+
+const onSelectTask = async (row: any) => {
+	selectedTask.value = row;
+	try {
+		const res = await trainApi.getTrainMonitor({ taskId: row.taskId });
+		monitorOverview.value = res?.data?.overview || {};
+	} catch (error) {
+		monitorOverview.value = {};
 	}
 };
 
@@ -126,5 +170,29 @@ onMounted(() => {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+}
+
+.detail-metrics {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.metric-title {
+	font-size: 12px;
+	color: #909399;
+}
+
+.metric-value {
+	margin-top: 8px;
+	font-size: 22px;
+	font-weight: 600;
+	color: #303133;
+}
+
+@media (max-width: 1200px) {
+	.detail-metrics {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
 }
 </style>

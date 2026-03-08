@@ -6,6 +6,7 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
 import json
+import csv
 import os
 import subprocess
 import cv2
@@ -2072,6 +2073,32 @@ class VideoProcessingApp:
             return jsonify({"code": 500, "msg": str(e)})
 
     # ========== 训练管理占位接口（不接入训练执行） ==========
+    def _extract_request_token(self):
+        """从请求头提取JWT，兼容 `Bearer xxx` 和纯 token 两种格式"""
+        auth_header = request.headers.get('Authorization', '').strip()
+        if not auth_header:
+            return ''
+        if auth_header.lower().startswith('bearer '):
+            return auth_header[7:].strip()
+        return auth_header
+
+    def _require_train_admin(self):
+        """训练管理模块权限校验：仅管理员可访问"""
+        token = self._extract_request_token()
+        if not token:
+            return jsonify({'code': 401, 'msg': '未登录或Token缺失'}), 401
+
+        verify_result = self.user_manager.verify_token(token)
+        if verify_result.get('code') != 0:
+            return jsonify({'code': 401, 'msg': verify_result.get('msg', 'Token无效')}), 401
+
+        payload = verify_result.get('data') or {}
+        role = payload.get('role')
+        if role != 'admin':
+            return jsonify({'code': 403, 'msg': '无权限访问训练管理模块（仅管理员）'}), 403
+
+        return None
+
     def _build_placeholder_train_tasks(self):
         """构造训练任务列表（占位 + 本地 runs 扫描）"""
         tasks = []
@@ -2114,9 +2141,91 @@ class VideoProcessingApp:
 
         return tasks
 
+    def _safe_float(self, value, default=0.0):
+        try:
+            if value is None or value == '':
+                return default
+            return float(value)
+        except Exception:
+            return default
+
+    def _find_run_path_by_task_id(self, task_id):
+        """根据 scan-任务ID 解析 runs 路径"""
+        if not task_id or not str(task_id).startswith('scan-'):
+            return None
+        parts = str(task_id).split('-', 2)
+        if len(parts) != 3:
+            return None
+        project_name = parts[1]
+        run_name = parts[2]
+        run_path = os.path.join(self.BASE_DIR, 'runs', project_name, run_name)
+        return run_path if os.path.isdir(run_path) else None
+
+    def _load_run_epochs_from_csv(self, run_path):
+        """从 runs/<project>/<run>/results.csv 读取监控曲线（仅读取，不执行训练）"""
+        csv_path = os.path.join(run_path, 'results.csv')
+        if not os.path.isfile(csv_path):
+            return []
+
+        rows = []
+        with open(csv_path, 'r', encoding='utf-8', newline='') as f:
+            reader = csv.DictReader(f)
+            for idx, raw in enumerate(reader, start=1):
+                row = {str(k).strip(): v for k, v in raw.items()}
+                epoch = int(self._safe_float(row.get('epoch'), idx - 1)) + 1
+
+                # YOLO不同版本字段命名略有差异，这里做兼容映射。
+                loss = self._safe_float(row.get('train/box_loss'))
+                if loss == 0.0:
+                    loss = self._safe_float(row.get('val/box_loss'))
+                if loss == 0.0:
+                    loss = self._safe_float(row.get('train/loss'))
+
+                precision = self._safe_float(row.get('metrics/precision(B)'))
+                if precision == 0.0:
+                    precision = self._safe_float(row.get('metrics/precision'))
+
+                recall = self._safe_float(row.get('metrics/recall(B)'))
+                if recall == 0.0:
+                    recall = self._safe_float(row.get('metrics/recall'))
+
+                map50 = self._safe_float(row.get('metrics/mAP50(B)'))
+                if map50 == 0.0:
+                    map50 = self._safe_float(row.get('metrics/mAP50'))
+
+                rows.append({
+                    'epoch': epoch,
+                    'loss': round(loss, 4),
+                    'precision': round(precision, 4),
+                    'recall': round(recall, 4),
+                    'map50': round(map50, 4),
+                })
+        return rows
+
+    def _build_compare_metrics(self, model_a, model_b, eval_a, eval_b):
+        """构造模型比较指标"""
+        def winner(metric_name, a, b):
+            lower_better = '耗时' in metric_name
+            if abs(a - b) < 1e-9:
+                return '相近'
+            if lower_better:
+                return model_a if a < b else model_b
+            return model_a if a > b else model_b
+
+        return [
+            {'metric': 'mAP50', 'modelA': round(eval_a.get('map50', 0.0), 4), 'modelB': round(eval_b.get('map50', 0.0), 4), 'winner': winner('mAP50', eval_a.get('map50', 0.0), eval_b.get('map50', 0.0))},
+            {'metric': 'Precision', 'modelA': round(eval_a.get('precision', 0.0), 4), 'modelB': round(eval_b.get('precision', 0.0), 4), 'winner': winner('Precision', eval_a.get('precision', 0.0), eval_b.get('precision', 0.0))},
+            {'metric': 'Recall', 'modelA': round(eval_a.get('recall', 0.0), 4), 'modelB': round(eval_b.get('recall', 0.0), 4), 'winner': winner('Recall', eval_a.get('recall', 0.0), eval_b.get('recall', 0.0))},
+            {'metric': '推理耗时(ms/img)', 'modelA': round(eval_a.get('latency', 0.0), 3), 'modelB': round(eval_b.get('latency', 0.0), 3), 'winner': winner('推理耗时(ms/img)', eval_a.get('latency', 0.0), eval_b.get('latency', 0.0))},
+        ]
+
     def get_train_tasks(self):
         """获取训练任务列表（占位接口）"""
         try:
+            auth_error = self._require_train_admin()
+            if auth_error:
+                return auth_error
+
             tasks = self._build_placeholder_train_tasks()
             return jsonify({
                 'code': 0,
@@ -2134,6 +2243,10 @@ class VideoProcessingApp:
     def create_train_task(self):
         """创建训练任务（占位接口，不执行训练）"""
         try:
+            auth_error = self._require_train_admin()
+            if auth_error:
+                return auth_error
+
             data = request.get_json() or {}
             task_name = (data.get('taskName') or '').strip()
             if not task_name:
@@ -2170,23 +2283,38 @@ class VideoProcessingApp:
     def get_train_monitor(self):
         """获取训练监控数据（占位接口）"""
         try:
+            auth_error = self._require_train_admin()
+            if auth_error:
+                return auth_error
+
             task_id = request.args.get('taskId', '')
-            epochs = []
-            for idx in range(1, 11):
-                epochs.append({
-                    'epoch': idx,
-                    'loss': round(max(0.1, 2.2 - idx * 0.18), 4),
-                    'precision': round(min(0.99, 0.52 + idx * 0.035), 4),
-                    'recall': round(min(0.99, 0.48 + idx * 0.034), 4),
-                    'map50': round(min(0.99, 0.45 + idx * 0.04), 4),
-                })
+            run_path = self._find_run_path_by_task_id(task_id)
+            epochs = self._load_run_epochs_from_csv(run_path) if run_path else []
+
+            status = 'placeholder'
+            if not epochs:
+                for idx in range(1, 11):
+                    epochs.append({
+                        'epoch': idx,
+                        'loss': round(max(0.1, 2.2 - idx * 0.18), 4),
+                        'precision': round(min(0.99, 0.52 + idx * 0.035), 4),
+                        'recall': round(min(0.99, 0.48 + idx * 0.034), 4),
+                        'map50': round(min(0.99, 0.45 + idx * 0.04), 4),
+                    })
+            else:
+                status = 'runs-csv'
+
+            current_epoch = epochs[-1]['epoch'] if epochs else 0
+            total_epoch = max(current_epoch, 100 if status == 'placeholder' else current_epoch)
+            progress = int((current_epoch / total_epoch) * 100) if total_epoch > 0 else 0
+            progress = max(0, min(progress, 100))
 
             overview = {
                 'taskId': task_id or 'placeholder-001',
-                'status': 'running-placeholder',
-                'currentEpoch': 10,
-                'totalEpoch': 100,
-                'progress': 10,
+                'status': 'running-placeholder' if status == 'placeholder' else 'completed-history',
+                'currentEpoch': current_epoch,
+                'totalEpoch': total_epoch,
+                'progress': progress,
                 'map50': epochs[-1]['map50'],
                 'precision': epochs[-1]['precision'],
                 'recall': epochs[-1]['recall'],
@@ -2195,10 +2323,10 @@ class VideoProcessingApp:
 
             return jsonify({
                 'code': 0,
-                'msg': '获取训练监控成功（占位数据）',
+                'msg': '获取训练监控成功',
                 'data': {
-                    'status': 'placeholder',
-                    'todo': '后续接入真实训练日志与指标流',
+                    'status': status,
+                    'todo': '当前优先读取 runs/results.csv，后续接入实时训练日志流',
                     'overview': overview,
                     'epochs': epochs,
                 },
@@ -2210,6 +2338,10 @@ class VideoProcessingApp:
     def get_train_datasets(self):
         """获取训练数据集列表（占位接口）"""
         try:
+            auth_error = self._require_train_admin()
+            if auth_error:
+                return auth_error
+
             dataset_candidates = []
             for folder in ['datasets', 'datesets']:
                 folder_path = os.path.join(self.BASE_DIR, folder)
@@ -2241,6 +2373,10 @@ class VideoProcessingApp:
     def get_train_dataset_analysis(self, dataset_name):
         """获取数据集分析结果（占位接口）"""
         try:
+            auth_error = self._require_train_admin()
+            if auth_error:
+                return auth_error
+
             analysis = {
                 'datasetName': dataset_name,
                 'trainImages': 320,
@@ -2267,32 +2403,65 @@ class VideoProcessingApp:
     def get_train_model_compare(self):
         """获取模型比较结果（占位接口）"""
         try:
+            auth_error = self._require_train_admin()
+            if auth_error:
+                return auth_error
+
             model_options = [
                 {'modelId': 'weed_best', 'name': 'weed_best.pt (当前部署模型)'},
                 {'modelId': 'yolo11n', 'name': 'YOLO11n (占位对比模型)'},
                 {'modelId': 'yolo11s', 'name': 'YOLO11s (占位对比模型)'},
             ]
+            for task in self._build_placeholder_train_tasks():
+                if str(task.get('taskId', '')).startswith('scan-'):
+                    model_options.append({
+                        'modelId': task['taskId'],
+                        'name': f"{task['taskName']} (runs历史)",
+                    })
+
             model_a = request.args.get('modelA', model_options[0]['modelId'])
             model_b = request.args.get('modelB', model_options[1]['modelId'])
 
-            metrics = [
-                {'metric': 'mAP50', 'modelA': 0.912, 'modelB': 0.887, 'winner': model_a},
-                {'metric': 'Precision', 'modelA': 0.901, 'modelB': 0.872, 'winner': model_a},
-                {'metric': 'Recall', 'modelA': 0.865, 'modelB': 0.881, 'winner': model_b},
-                {'metric': '推理耗时(ms/img)', 'modelA': 14.8, 'modelB': 11.6, 'winner': model_b},
-            ]
+            def model_eval(model_id):
+                run_path = self._find_run_path_by_task_id(model_id)
+                if run_path:
+                    epochs = self._load_run_epochs_from_csv(run_path)
+                    if epochs:
+                        last = epochs[-1]
+                        return {
+                            'map50': last.get('map50', 0.0),
+                            'precision': last.get('precision', 0.0),
+                            'recall': last.get('recall', 0.0),
+                            'latency': 14.0,
+                            'source': 'runs-csv',
+                        }
+
+                # 占位默认值（无历史CSV时）
+                defaults = {
+                    'weed_best': {'map50': 0.912, 'precision': 0.901, 'recall': 0.865, 'latency': 14.8},
+                    'yolo11n': {'map50': 0.887, 'precision': 0.872, 'recall': 0.881, 'latency': 11.6},
+                    'yolo11s': {'map50': 0.904, 'precision': 0.892, 'recall': 0.873, 'latency': 13.1},
+                }
+                result = defaults.get(model_id, {'map50': 0.88, 'precision': 0.86, 'recall': 0.84, 'latency': 12.5})
+                result['source'] = 'placeholder'
+                return result
+
+            eval_a = model_eval(model_a)
+            eval_b = model_eval(model_b)
+            metrics = self._build_compare_metrics(model_a, model_b, eval_a, eval_b)
+            status = 'runs-csv' if (eval_a.get('source') == 'runs-csv' or eval_b.get('source') == 'runs-csv') else 'placeholder'
 
             return jsonify({
                 'code': 0,
-                'msg': '获取模型比较成功（占位数据）',
+                'msg': '获取模型比较成功',
                 'data': {
-                    'status': 'placeholder',
-                    'todo': '后续接入真实评估报告与推理测速结果',
+                    'status': status,
+                    'todo': '当前优先读取 runs/results.csv，后续接入完整评估报告',
                     'modelA': model_a,
                     'modelB': model_b,
                     'modelOptions': model_options,
                     'metrics': metrics,
-                    'summary': f"占位结果：{model_a} 与 {model_b} 完成比较，后续接入真实评估数据。",
+                    'summary': f"{model_a} 与 {model_b} 比较完成（来源：{status}）。",
                 },
             })
         except Exception as e:

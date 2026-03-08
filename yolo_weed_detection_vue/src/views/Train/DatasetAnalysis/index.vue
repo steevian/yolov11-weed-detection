@@ -16,12 +16,17 @@
 						</el-select>
 					</el-form-item>
 					<el-form-item>
+						<el-checkbox v-model="showClassDistribution">类别分布</el-checkbox>
+						<el-checkbox v-model="showImageStats" class="ml10">图片统计</el-checkbox>
+						<el-checkbox v-model="showSizeDistribution" class="ml10">尺寸分布</el-checkbox>
+					</el-form-item>
+					<el-form-item>
 						<el-button type="primary" @click="loadAnalysis">分析</el-button>
 					</el-form-item>
 				</el-form>
 			</el-card>
 
-			<div class="analysis-cards mb15">
+			<div class="analysis-cards mb15" v-if="showImageStats">
 				<el-card>
 					<div class="metric-title">训练集图片</div>
 					<div class="metric-value">{{ analysis.trainImages || 0 }}</div>
@@ -34,24 +39,30 @@
 					<div class="metric-title">类别数量</div>
 					<div class="metric-value">{{ classRows.length }}</div>
 				</el-card>
+				<el-card>
+					<div class="metric-title">总图片数</div>
+					<div class="metric-value">{{ (analysis.trainImages || 0) + (analysis.valImages || 0) }}</div>
+				</el-card>
 			</div>
 
 			<el-row :gutter="12">
-				<el-col :span="12">
+				<el-col :span="12" v-if="showClassDistribution">
 					<el-card>
 						<template #header>类别分布</template>
 						<el-table :data="classRows" v-loading="loading" style="width: 100%">
 							<el-table-column prop="className" label="类别" min-width="160" />
 							<el-table-column prop="count" label="标注数量" min-width="120" />
+							<el-table-column prop="percent" label="占比" min-width="120" />
 						</el-table>
 					</el-card>
 				</el-col>
-				<el-col :span="12">
+				<el-col :span="12" v-if="showSizeDistribution">
 					<el-card>
 						<template #header>图像尺寸样本</template>
 						<el-table :data="sizeRows" v-loading="loading" style="width: 100%">
 							<el-table-column prop="width" label="宽" min-width="100" />
 							<el-table-column prop="height" label="高" min-width="100" />
+							<el-table-column prop="count" label="数量" min-width="100" />
 						</el-table>
 					</el-card>
 				</el-col>
@@ -64,21 +75,38 @@
 import { computed, onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useTrainApi } from '@/api/train';
+import { toPercentSafe } from '@/views/Train/utils';
 
 const trainApi = useTrainApi();
 const loading = ref(false);
 const datasets = ref<any[]>([]);
 const currentDataset = ref('');
 const analysis = ref<Record<string, any>>({});
+const showClassDistribution = ref(true);
+const showImageStats = ref(true);
+const showSizeDistribution = ref(true);
 
 const classRows = computed(() => {
 	const distribution = analysis.value.classDistribution || {};
-	return Object.keys(distribution).map((key) => ({ className: key, count: distribution[key] }));
+	const total = Object.values(distribution).reduce((sum: number, item: any) => sum + Number(item), 0);
+	return Object.keys(distribution).map((key) => ({
+		className: key,
+		count: distribution[key],
+		percent: total > 0 ? toPercentSafe(Number(distribution[key]) / total) : '-',
+	}));
 });
 
 const sizeRows = computed(() => {
 	const rows = analysis.value.imageSizes || [];
-	return rows.map((item: number[]) => ({ width: item[0], height: item[1] }));
+	const map = new Map<string, number>();
+	rows.forEach((item: number[]) => {
+		const key = `${item[0]}x${item[1]}`;
+		map.set(key, (map.get(key) || 0) + 1);
+	});
+	return Array.from(map.entries()).map(([key, count]) => {
+		const [width, height] = key.split('x');
+		return { width: Number(width), height: Number(height), count };
+	});
 });
 
 const loadDatasets = async () => {
@@ -118,7 +146,7 @@ onMounted(async () => {
 <style scoped lang="scss">
 .analysis-cards {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
+	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: 12px;
 }
 
@@ -136,7 +164,7 @@ onMounted(async () => {
 
 @media (max-width: 1200px) {
 	.analysis-cards {
-		grid-template-columns: repeat(1, minmax(0, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 </style>
