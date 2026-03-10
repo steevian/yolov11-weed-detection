@@ -1,0 +1,15 @@
+train: D:\cyd\Desktop\yolo_web-main\datasets\processed_3seasonweeddet10\images\train
+val: D:\cyd\Desktop\yolo_web-main\datasets\processed_3seasonweeddet10\images\val
+test: D:\cyd\Desktop\yolo_web-main\datasets\processed_3seasonweeddet10\images\test
+nc: 10
+names:
+- Carpetweed
+- Eclipta
+- Goosegrass
+- Lambsquarters
+- Morningglory
+- Ragweed
+- Palmer Amaranth
+- Purslane
+- Spotted spurge
+- Waterhemp

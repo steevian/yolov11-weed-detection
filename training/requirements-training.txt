@@ -1,0 +1,12 @@
+ultralytics==8.4.7
+torch==2.9.1
+torchvision==0.24.1
+thop
+pyyaml
+lxml
+scikit-learn
+matplotlib
+pandas
+seaborn
+albumentations
+tqdm

@@ -1,0 +1,7 @@
+seed: 42
+deterministic: true
+cudnn_benchmark: false
+python_hash_seed: 42
+notes:
+  - Keep seed and deterministic settings identical across phase2-5 experiments.
+  - For speed-focused profiling only, cudnn_benchmark can be switched to true explicitly.

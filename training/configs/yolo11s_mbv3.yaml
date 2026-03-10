@@ -1,0 +1,38 @@
+# YOLO11-S variant with MobileNetV3 backbone via Ultralytics TorchVision+Index.
+# This keeps neck/head mostly aligned with the baseline for fair comparison.
+
+nc: 10
+scales:
+  s: [0.50, 0.50, 1024]
+
+backbone:
+  # [from, repeats, module, args]
+  # TorchVision args after first channel placeholder:
+  # [model, weights, unwrap, truncate, split]
+  - [-1, 1, TorchVision, [960, mobilenet_v3_large, DEFAULT, True, 2, True]]
+  - [0, 1, Index, [40, 5]]
+  - [0, 1, Index, [112, 12]]
+  - [0, 1, Index, [960, 17]]
+
+  - [1, 1, Conv, [256, 1, 1]]  # P3 adapter
+  - [2, 1, Conv, [512, 1, 1]]  # P4 adapter
+  - [3, 1, Conv, [1024, 1, 1]] # P5 adapter
+
+head:
+  - [6, 1, nn.Upsample, [None, 2, nearest]]
+  - [[-1, 5], 1, Concat, [1]]
+  - [-1, 2, C3k2, [512, False]]
+
+  - [-1, 1, nn.Upsample, [None, 2, nearest]]
+  - [[-1, 4], 1, Concat, [1]]
+  - [-1, 2, C3k2, [256, False]]
+
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 9], 1, Concat, [1]]
+  - [-1, 2, C3k2, [512, False]]
+
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 6], 1, Concat, [1]]
+  - [-1, 2, C3k2, [1024, True]]
+
+  - [[12, 15, 18], 1, Detect, [nc]]
