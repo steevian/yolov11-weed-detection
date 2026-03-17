@@ -410,5 +410,23 @@ python training/scripts/phase1_generate_data_yaml.py
 - 已完成止血：仅保留正式守护实例，停止误开的调试实例。
 - 新增重开观察脚本：`training/scripts/reopen_phase2_watch.ps1`，可在重开 VSCode 后快速恢复单一进度观察终端。
 
+## 15. Phase2中断恢复结论（2026-03-15）
+
+- 正式 run：`experiments/YOLOv11-S/baseline_full200_fresh_20260313_195344`
+- 中断后核验结论：`last.pt` 完整可用，`results.csv` 已稳定记录到 `epoch 107`，训练结果连续正常。
+- 误开 run：`baseline_full200_fresh_20260313_195142` 无有效权重，已删除。
+- 已重新通过 `run_phase2_resilient.ps1 -Mode resume` 恢复训练，并验证日志从 `108/200` 接续执行。
+
 ## 12. Phase2自动更新追踪
 - 2026-03-14 23:26:42 | run_id=baseline_full200_fresh_20260313_195344 | status=interrupted
+- 2026-03-15 19:21:50 | run_id=baseline_full200_fresh_20260313_195344 | status=failed
+- 2026-03-15 19:31:23 | run_id=baseline_full200_fresh_20260313_195344 | status=failed
+- 2026-03-15 19:32:38 | run_id=baseline_full200_fresh_20260313_195344 | status=failed
+- 2026-03-15 19:34:16 | run_id=baseline_full200_fresh_20260313_195344 | status=failed
+- 2026-03-15 23:42:15 | run_id=baseline_full200_fresh_20260313_195344 | status=completed
+
+## 16. Phase3启动审计（2026-03-15）
+
+- 2026-03-15 23:52:41 | 审计结论：Phase2已完整200轮完成（run_id=baseline_full200_fresh_20260313_195344，status=completed）。
+- 2026-03-15 23:52:41 | 公平性说明：workers从0调整到1仅影响数据加载并行度，不改变优化目标；在固定seed与其余超参一致前提下，公平性可接受。
+- 2026-03-15 23:52:41 | Phase3已启动：run_id=mbv3_full200_fresh_20260315_234917，epochs=200, batch=6, workers=1, cache=disk, device=0, amp=True。

@@ -1,0 +1,3 @@
+[INFO] run_id=mbv3_full200_fresh_20260315_234917
+[INFO] run_dir=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3\mbv3_full200_fresh_20260315_234917
+[K[34m[1mtrain: [0mScanning D:\cyd\Desktop\yolo_web-main\datasets\processed_3seasonweeddet10\labels\train.cache... 5654 images, 0 backgrounds, 0 corrupt: 100% ━━━━━━━━━━━━ 5654/5654  0.0s
