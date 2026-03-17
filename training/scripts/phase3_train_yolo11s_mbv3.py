@@ -1,4 +1,10 @@
-"""Phase 3 training: YOLO11-S with MobileNetV3 backbone."""
+"""Phase 3 training: YOLO11-S with MobileNetV3 backbone.
+
+功能简介（中文）：
+1) 在 MobileNetV3 改进骨干上执行 200 轮全量训练；
+2) 与 Phase2 对齐核心训练参数，保证对比公平性；
+3) 支持断点续训与失败分类，自动落盘关键实验产物（args/hyperparams/env/results/log/summary）。
+"""
 
 from __future__ import annotations
 

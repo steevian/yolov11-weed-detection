@@ -1,7 +1,7 @@
 {
   "data": "D:\\cyd\\Desktop\\yolo_web-main\\training\\configs\\data_3seasonweeddet10.yaml",
   "weights": "yolo11s.pt",
-  "checkpoint": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S\\baseline_20260310_141013\\weights\\last.pt",
+  "checkpoint": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S\\baseline_full200_fresh_20260313_195344\\weights\\last.pt",
   "epochs": 200,
   "batch": 6,
   "imgsz": 640,
@@ -14,7 +14,7 @@
   "device": "0",
   "amp": true,
   "seed": 42,
-  "resume": false,
+  "resume": true,
   "augment": {
     "fliplr": 0.5,
     "flipud": 0.1,

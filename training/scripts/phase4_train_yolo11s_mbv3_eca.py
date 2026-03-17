@@ -2,6 +2,11 @@
 
 Requires custom ultralytics package copy with ECA module registration.
 Use phase0_prepare_ultralytics_custom.py then patch registration manually.
+
+功能简介（中文）：
+1) 在 MBV3 结构上叠加 ECA 注意力模块进行训练；
+2) 保持与 Phase2/Phase3 一致的核心参数口径，便于公平对比；
+3) 自动保存关键实验产物与汇总信息。
 """
 
 from __future__ import annotations
@@ -90,6 +95,7 @@ def main() -> int:
         print("[ERROR] Missing data/model yaml.")
         return 1
 
+    # Keep cache parsing behavior consistent with phase2/phase3.
     cache_mode_raw = str(args.cache).strip().lower()
     if cache_mode_raw in {"false", "none", "0", "off"}:
         cache_mode: str | bool = False
@@ -99,6 +105,7 @@ def main() -> int:
         cache_mode = "disk"
 
     if args.ultralytics_root.exists() and str(args.ultralytics_root.resolve()) not in sys.path:
+        # Ensure custom ECA-enabled ultralytics package has priority during import.
         sys.path.insert(0, str(args.ultralytics_root.resolve()))
 
     from ultralytics import YOLO  # type: ignore
@@ -107,6 +114,7 @@ def main() -> int:
     args.project.mkdir(parents=True, exist_ok=True)
     ctx = create_run_context(args.project, prefix=args.run_prefix)
 
+    # Save hyperparameters and host environment for reproducibility audits.
     save_json(
         ctx.run_dir / "hyperparams.json",
         {
@@ -131,6 +139,7 @@ def main() -> int:
     save_json(ctx.run_dir / "environment_snapshot.json", build_environment_snapshot())
 
     try:
+        # Train with the same core optimization/data args as phase2 to keep comparisons fair.
         model = YOLO(str(args.model))
         train_results = model.train(
             data=str(args.data),

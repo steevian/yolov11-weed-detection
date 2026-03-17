@@ -430,3 +430,9 @@ python training/scripts/phase1_generate_data_yaml.py
 - 2026-03-15 23:52:41 | 审计结论：Phase2已完整200轮完成（run_id=baseline_full200_fresh_20260313_195344，status=completed）。
 - 2026-03-15 23:52:41 | 公平性说明：workers从0调整到1仅影响数据加载并行度，不改变优化目标；在固定seed与其余超参一致前提下，公平性可接受。
 - 2026-03-15 23:52:41 | Phase3已启动：run_id=mbv3_full200_fresh_20260315_234917，epochs=200, batch=6, workers=1, cache=disk, device=0, amp=True。
+
+## 16. Phase3自动更新追踪
+- 2026-03-16 13:24:46 | run_id=mbv3_full200_fresh_20260315_234917 | status=failed
+- 2026-03-16 16:40:14 | run_id=mbv3_full200_fresh_20260315_234917 | status=failed
+- 2026-03-16 22:45:17 | run_id=mbv3_full200_fresh_20260315_234917 | status=failed
+- 2026-03-17 10:53:08 | run_id=mbv3_full200_fresh_20260315_234917 | status=completed

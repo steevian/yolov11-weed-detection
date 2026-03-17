@@ -4,6 +4,11 @@ Design goals:
 1) Fair comparison: key training params are aligned with phase3/phase4.
 2) Full-state resume: continue from last.pt with optimizer/lr/epoch state.
 3) Data preservation: always emit train.log, env.txt, run_summary.json.
+
+功能简介（中文）：
+1) 执行 Phase2 基线 200 轮训练；
+2) 支持完整断点续训与异常分类；
+3) 自动保存可复现实验资产并写入追踪日志。
 """
 
 from __future__ import annotations
@@ -80,6 +85,12 @@ def parse_args() -> argparse.Namespace:
         default="baseline_full200_fresh",
         help="Run prefix, final run_id is <prefix>_<timestamp>",
     )
+    parser.add_argument(
+        "--gpu-failure-exit-code",
+        type=int,
+        default=12,
+        help="Dedicated exit code for CUDA/bad-allocation failures so watchdog can apply longer cooldown",
+    )
     return parser.parse_args()
 
 
@@ -140,6 +151,7 @@ def _resolve_resume_checkpoint(project: Path, explicit: Path | None) -> Path | N
 
 def main() -> int:
     args = parse_args()
+    # Normalize cache mode once to avoid config drift between fresh/resume runs.
     cache_mode_raw = str(args.cache).strip().lower()
     if cache_mode_raw in {"false", "none", "0", "off"}:
         cache_mode: str | bool = False
@@ -157,6 +169,7 @@ def main() -> int:
     args.project.mkdir(parents=True, exist_ok=True)
     resume_ckpt: Path | None = None
     if args.resume:
+        # Resume must reuse the original run directory to keep metrics/checkpoints in one lineage.
         resume_ckpt = _resolve_resume_checkpoint(args.project, args.checkpoint)
         if resume_ckpt is None:
             print("[ERROR] resume requested but no valid checkpoint found.")
@@ -205,6 +218,7 @@ def main() -> int:
             "translate": 0.1,
         },
     }
+    # Persist experiment contract and environment snapshot for post-mortem reproducibility.
     save_json(ctx.run_dir / "hyperparams.json", hyperparams)
     env_snapshot = build_environment_snapshot()
     save_json(ctx.run_dir / "environment_snapshot.json", env_snapshot)
@@ -235,6 +249,7 @@ def main() -> int:
     print(f"[INFO] run_id={ctx.run_id}")
     print(f"[INFO] run_dir={ctx.run_dir}")
 
+    # Keep these kwargs explicitly aligned with phase3/phase4 for fair comparison.
     train_kwargs = {
         "data": str(args.data),
         "epochs": args.epochs,
@@ -274,14 +289,23 @@ def main() -> int:
         tb = traceback.format_exc(limit=20)
         print("[ERROR] Training failed.")
         print(f"detail: {exc}")
+        err_text = str(exc).lower()
+        is_gpu_memory_like = (
+            "bad allocation" in err_text
+            or "out of memory" in err_text
+            or "cuda error" in err_text
+            or "cublas" in err_text
+        )
+        status = "failed_gpu_memory" if is_gpu_memory_like else "failed"
+        err_kind = "gpu_memory_like" if is_gpu_memory_like else "generic"
         _append_markdown_event(
             trianlog_path,
             "Phase2异常",
-            [f"run_id={ctx.run_id}", f"error={exc}", "traceback:", tb],
+            [f"run_id={ctx.run_id}", f"error={exc}", f"error_kind={err_kind}", "traceback:", tb],
         )
-        finalize_run_metadata(ctx, extra={"status": "failed", "error": str(exc)})
-        _update_firstmemory(firstmemory_path, ctx.run_id, "failed")
-        return 2
+        finalize_run_metadata(ctx, extra={"status": status, "error": str(exc), "error_kind": err_kind})
+        _update_firstmemory(firstmemory_path, ctx.run_id, status)
+        return args.gpu_failure_exit_code if is_gpu_memory_like else 2
     finally:
         sys.stdout = original_stdout
         sys.stderr = original_stderr

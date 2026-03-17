@@ -1,6 +1,6 @@
 task: detect
 mode: train
-model: yolo11s.pt
+model: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S\baseline_full200_fresh_20260313_195344\weights\last.pt
 data: D:\cyd\Desktop\yolo_web-main\training\configs\data_3seasonweeddet10.yaml
 epochs: 200
 time: null
@@ -24,7 +24,7 @@ single_cls: false
 rect: false
 cos_lr: false
 close_mosaic: 10
-resume: false
+resume: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S\baseline_full200_fresh_20260313_195344\weights\last.pt
 amp: true
 fraction: 1.0
 profile: false

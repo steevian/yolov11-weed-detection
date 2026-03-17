@@ -351,3 +351,316 @@ RuntimeError: bad allocation
 - resume=False
 - checkpoint=N/A
 - epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-16 13:24:46 | Phase3异常
+
+- run_id=mbv3_full200_fresh_20260315_234917
+- error=Caught error in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 229, in load_image
+    im = np.load(fn)
+         ^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\numpy\lib\_npyio_impl.py", line 483, in load
+    return format.read_array(fid, allow_pickle=allow_pickle,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\numpy\lib\_format_impl.py", line 847, in read_array
+    array = numpy.fromfile(fp, dtype=dtype, count=count)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 25.9 MiB for an array with shape (27207000,) and data type uint8
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 376, in __getitem__
+    return self.transforms(self.get_image_and_label(index))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 389, in get_image_and_label
+    label["img"], label["ori_shape"], label["resized_shape"] = self.load_image(index)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 233, in load_image
+    im = imread(f, flags=self.cv2_flag)  # BGR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\utils\patches.py", line 42, in imread
+    im = cv2.imdecode(file_bytes, flags)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+cv2.error: OpenCV(4.13.0) D:\a\opencv-python\opencv-python\opencv\modules\core\src\alloc.cpp:73: error: (-4:Insufficient memory) Failed to allocate 27207000 bytes in function 'cv::OutOfMemoryError'
+
+
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase3_train_yolo11s_mbv3.py", line 270, in main
+    "translate": hyperparams["augment"]["translate"],
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 487, in _do_train
+    self.metrics, self.fitness = self.validate()
+                                 ^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 715, in validate
+    metrics = self.validator(self)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\validator.py", line 203, in __call__
+    for batch_i, batch in enumerate(bar):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\utils\tqdm.py", line 350, in __iter__
+    for item in self.iterable:
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\build.py", line 76, in __iter__
+    yield next(self.iterator)
+          ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 732, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1506, in _next_data
+    return self._process_data(data, worker_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1541, in _process_data
+    data.reraise()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\_utils.py", line 769, in reraise
+    raise exception
+cv2.error: Caught error in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 229, in load_image
+    im = np.load(fn)
+         ^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\numpy\lib\_npyio_impl.py", line 483, in load
+    return format.read_array(fid, allow_pickle=allow_pickle,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\numpy\lib\_format_impl.py", line 847, in read_array
+    array = numpy.fromfile(fp, dtype=dtype, count=count)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 25.9 MiB for an array with shape (27207000,) and data type uint8
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 376, in __getitem__
+    return self.transforms(self.get_image_and_label(index))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 389, in get_image_and_label
+    label["img"], label["ori_shape"], label["resized_shape"] = self.load_image(index)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 233, in load_image
+    im = imread(f, flags=self.cv2_flag)  # BGR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\utils\patches.py", line 42, in imread
+    im = cv2.imdecode(file_bytes, flags)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+cv2.error: OpenCV(4.13.0) D:\a\opencv-python\opencv-python\opencv\modules\core\src\alloc.cpp:73: error: (-4:Insufficient memory) Failed to allocate 27207000 bytes in function 'cv::OutOfMemoryError'
+
+
+
+## 2026-03-16 13:24:51 | Phase3 watchdog retry
+
+- attempt=1
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase3_failures\attempt_1_20260316_132451.log
+- retry_delay_seconds=20
+
+## 2026-03-16 13:25:22 | Phase3启动
+
+- run_id=mbv3_full200_fresh_20260316_132521
+- resume=False
+- checkpoint=N/A
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-16 14:01:13 | Phase3 watchdog start
+
+- mode=resume
+- checkpoint=D:/cyd/Desktop/yolo_web-main/experiments/YOLOv11-S-MBV3/mbv3_full200_fresh_20260315_234917/weights/last.pt
+- epochs=200, batch=6, workers=1, cache=disk, device=0
+
+## 2026-03-16 14:01:22 | Phase3启动
+
+- run_id=mbv3_full200_fresh_20260315_234917
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3\mbv3_full200_fresh_20260315_234917\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-16 16:40:14 | Phase3异常
+
+- run_id=mbv3_full200_fresh_20260315_234917
+- error=Pin memory thread exited unexpectedly
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase3_train_yolo11s_mbv3.py", line 276, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 487, in _do_train
+    self.metrics, self.fitness = self.validate()
+                                 ^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 715, in validate
+    metrics = self.validator(self)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\validator.py", line 203, in __call__
+    for batch_i, batch in enumerate(bar):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\utils\tqdm.py", line 350, in __iter__
+    for item in self.iterable:
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\build.py", line 76, in __iter__
+    yield next(self.iterator)
+          ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 732, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1482, in _next_data
+    idx, data = self._get_data()
+                ^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1439, in _get_data
+    raise RuntimeError("Pin memory thread exited unexpectedly")
+RuntimeError: Pin memory thread exited unexpectedly
+
+## 2026-03-16 16:40:18 | Phase3 watchdog retry
+
+- attempt=1
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase3_failures\attempt_1_20260316_164018.log
+- retry_delay_seconds=20
+
+## 2026-03-16 16:40:48 | Phase3启动
+
+- run_id=mbv3_full200_fresh_20260315_234917
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3\mbv3_full200_fresh_20260315_234917\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-16 22:45:17 | Phase3异常
+
+- run_id=mbv3_full200_fresh_20260315_234917
+- error=Caught SystemError in DataLoader worker process 1.
+Original numpy._core._exceptions._ArrayMemoryError: Unable to allocate 1.06 MiB for an array with shape (640, 578, 3) and data type uint8
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 376, in __getitem__
+    return self.transforms(self.get_image_and_label(index))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 389, in get_image_and_label
+    label["img"], label["ori_shape"], label["resized_shape"] = self.load_image(index)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 244, in load_image
+    im = cv2.resize(im, (w, h), interpolation=cv2.INTER_LINEAR)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SystemError: <built-in function resize> returned a result with an exception set
+
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase3_train_yolo11s_mbv3.py", line 276, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 487, in _do_train
+    self.metrics, self.fitness = self.validate()
+                                 ^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\trainer.py", line 715, in validate
+    metrics = self.validator(self)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\engine\validator.py", line 203, in __call__
+    for batch_i, batch in enumerate(bar):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\utils\tqdm.py", line 350, in __iter__
+    for item in self.iterable:
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\build.py", line 76, in __iter__
+    yield next(self.iterator)
+          ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 732, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1506, in _next_data
+    return self._process_data(data, worker_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1541, in _process_data
+    data.reraise()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\_utils.py", line 769, in reraise
+    raise exception
+SystemError: Caught SystemError in DataLoader worker process 1.
+Original numpy._core._exceptions._ArrayMemoryError: Unable to allocate 1.06 MiB for an array with shape (640, 578, 3) and data type uint8
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 376, in __getitem__
+    return self.transforms(self.get_image_and_label(index))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 389, in get_image_and_label
+    label["img"], label["ori_shape"], label["resized_shape"] = self.load_image(index)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\ultralytics\data\base.py", line 244, in load_image
+    im = cv2.resize(im, (w, h), interpolation=cv2.INTER_LINEAR)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SystemError: <built-in function resize> returned a result with an exception set
+
+
+## 2026-03-16 22:45:20 | Phase3 watchdog retry
+
+- attempt=2
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase3_failures\attempt_2_20260316_224520.log
+- retry_delay_seconds=20
+
+## 2026-03-16 22:45:50 | Phase3启动
+
+- run_id=mbv3_full200_fresh_20260315_234917
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3\mbv3_full200_fresh_20260315_234917\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-17 10:53:08 | Phase3完成
+
+- run_id=mbv3_full200_fresh_20260315_234917
+- results_csv=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3\mbv3_full200_fresh_20260315_234917\results.csv
+- train_log=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3\mbv3_full200_fresh_20260315_234917\train.log
+## 2026-03-17 10:53:11 | Phase3 watchdog completed
+
+- attempt=3
+- exit_code=0
+
