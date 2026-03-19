@@ -20,6 +20,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--mbv3", type=Path, required=True)
     parser.add_argument("--mbv3-eca", type=Path, required=True)
     parser.add_argument("--imgsz", type=int, default=640)
+    parser.add_argument("--batch", type=int, default=1)
+    parser.add_argument("--workers", type=int, default=0)
     parser.add_argument("--warmup", type=int, default=10)
     parser.add_argument("--iters", type=int, default=100)
     parser.add_argument("--out-csv", type=Path, default=repo_root / "experiments" / "summary" / "comparison_metrics.csv")
@@ -77,9 +79,20 @@ def measure_complexity(model, imgsz: int) -> tuple[float, float]:
         return params, float("nan")
 
 
-def evaluate_one(name: str, weights: Path, data: Path, imgsz: int, warmup: int, iters: int, yolo_cls) -> dict[str, float | str]:
+def evaluate_one(
+    name: str,
+    weights: Path,
+    data: Path,
+    imgsz: int,
+    batch: int,
+    workers: int,
+    warmup: int,
+    iters: int,
+    yolo_cls,
+) -> dict[str, float | str]:
     model = yolo_cls(str(weights))
-    res = model.val(data=str(data), split="test", imgsz=imgsz, batch=1, verbose=False)
+    # Keep workers configurable for Windows stability (avoid shared-memory mapping failures).
+    res = model.val(data=str(data), split="test", imgsz=imgsz, batch=batch, workers=workers, verbose=False)
 
     params, flops = measure_complexity(model, imgsz)
     fps = measure_fps(model, imgsz, warmup=warmup, iters=iters)
@@ -107,9 +120,19 @@ def main() -> int:
     args.out_csv.parent.mkdir(parents=True, exist_ok=True)
 
     rows = [
-        evaluate_one("YOLOv11-S", args.baseline, args.data, args.imgsz, args.warmup, args.iters, YOLO),
-        evaluate_one("YOLOv11-S-MBV3", args.mbv3, args.data, args.imgsz, args.warmup, args.iters, YOLO),
-        evaluate_one("YOLOv11-S-MBV3-ECA", args.mbv3_eca, args.data, args.imgsz, args.warmup, args.iters, YOLO),
+        evaluate_one("YOLOv11-S", args.baseline, args.data, args.imgsz, args.batch, args.workers, args.warmup, args.iters, YOLO),
+        evaluate_one("YOLOv11-S-MBV3", args.mbv3, args.data, args.imgsz, args.batch, args.workers, args.warmup, args.iters, YOLO),
+        evaluate_one(
+            "YOLOv11-S-MBV3-ECA",
+            args.mbv3_eca,
+            args.data,
+            args.imgsz,
+            args.batch,
+            args.workers,
+            args.warmup,
+            args.iters,
+            YOLO,
+        ),
     ]
 
     with args.out_csv.open("w", encoding="utf-8", newline="") as f:

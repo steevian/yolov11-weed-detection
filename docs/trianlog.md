@@ -840,3 +840,29 @@ numpy._core._exceptions._ArrayMemoryError: Unable to allocate 4.88 MiB for an ar
 - attempt=2
 - exit_code=0
 
+## 2026-03-19 02:10:00 | 冒烟50轮数据保全完成
+
+- 保全目标：保留 50 轮冒烟训练的全部可用论文资产，不覆盖、不删除。
+- 保全目录说明文件：`experiments/summary/smoke50_preservation_20260319/README.md`
+- 关键文件哈希清单：`experiments/summary/smoke50_preservation_20260319/smoke50_key_files_sha256.csv`
+- 本次保全范围（核心 run）：
+- `experiments/YOLOv11-S/baseline_20260310_141013`
+- `experiments/YOLOv11-S-MBV3/mbv3_20260310_155214`
+- `experiments/YOLOv11-S-MBV3-ECA/mbv3_eca_20260310_175456`
+
+## 2026-03-19 02:18:00 | full200 独立验证产物落盘完成
+
+- 目标：为 200 轮全量验证创建独立新目录，避免覆盖既有 summary 与冒烟材料。
+- 产物目录：`experiments/summary/full200_validation_20260319/`
+- 关键输出：
+- `comparison_metrics_full200.csv`
+- `comparison_metrics.md`
+- `实验汇总报告.md`
+- `figures_index.md`
+- `samples/`（导出 14 张样例）
+- 统一评测核心指标（test, batch=1, imgsz=640）：
+- YOLOv11-S：mAP50=0.21548，mAP50-95=0.19114，FPS=56.28
+- YOLOv11-S-MBV3：mAP50=0.24063，mAP50-95=0.21510，FPS=44.22
+- YOLOv11-S-MBV3-ECA：mAP50=0.25014，mAP50-95=0.22382，FPS=43.35
+- 结论：在 full200 设置下，ECA 版本取得最高 mAP；S 基线保持最高 FPS。
+

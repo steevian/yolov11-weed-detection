@@ -448,3 +448,27 @@ python training/scripts/phase1_generate_data_yaml.py
 ## 17. Phase4自动更新追踪
 - 2026-03-18 17:13:42 | run_id=mbv3_eca_20260317_114514 | status=failed
 - 2026-03-19 01:32:01 | run_id=mbv3_eca_20260317_114514 | status=completed
+
+## 18. 论文资产保全与full200独立验证（2026-03-19）
+
+- 冒烟 50 轮资产保全完成：
+        - 保全说明：`experiments/summary/smoke50_preservation_20260319/README.md`
+        - 关键文件指纹：`experiments/summary/smoke50_preservation_20260319/smoke50_key_files_sha256.csv`
+        - 保留核心冒烟 run：
+                - `experiments/YOLOv11-S/baseline_20260310_141013`
+                - `experiments/YOLOv11-S-MBV3/mbv3_20260310_155214`
+                - `experiments/YOLOv11-S-MBV3-ECA/mbv3_eca_20260310_175456`
+
+- full200 验证改为独立目录落盘，避免覆盖历史 summary：
+        - 目录：`experiments/summary/full200_validation_20260319/`
+        - 关键文件：`comparison_metrics_full200.csv`、`comparison_metrics.md`、`实验汇总报告.md`、`figures_index.md`、`samples/`
+
+- full200 三模型统一评测结果（test, batch=1, imgsz=640）：
+        - YOLOv11-S：mAP50=0.21548，mAP50-95=0.19114，FPS=56.28
+        - YOLOv11-S-MBV3：mAP50=0.24063，mAP50-95=0.21510，FPS=44.22
+        - YOLOv11-S-MBV3-ECA：mAP50=0.25014，mAP50-95=0.22382，FPS=43.35
+
+- 论文写作口径建议：
+        - 冒烟（50轮）用于方法探索过程与可视化示例；
+        - full200 用于最终对比结论与主表格；
+        - 两套数据严格分目录管理，确保审计与复现可追踪。
