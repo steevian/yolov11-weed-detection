@@ -1,0 +1,10 @@
+{
+  "run_id": "mbv3_eca_20260317_114514",
+  "run_dir": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S-MBV3-ECA\\mbv3_eca_20260317_114514",
+  "elapsed_seconds": 29863.91,
+  "elapsed_hms": "08:17:43",
+  "status": "completed",
+  "ultralytics_save_dir": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S-MBV3-ECA\\mbv3_eca_20260317_114514",
+  "results_csv": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S-MBV3-ECA\\mbv3_eca_20260317_114514\\results.csv",
+  "train_log": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S-MBV3-ECA\\mbv3_eca_20260317_114514\\train.log"
+}

@@ -1,0 +1,26 @@
+{
+  "data": "D:\\cyd\\Desktop\\yolo_web-main\\training\\configs\\data_3seasonweeddet10.yaml",
+  "model": "D:\\cyd\\Desktop\\yolo_web-main\\training\\configs\\yolo11s_mbv3_eca.yaml",
+  "checkpoint": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S-MBV3-ECA\\mbv3_eca_20260317_114514\\weights\\last.pt",
+  "epochs": 200,
+  "batch": 6,
+  "imgsz": 640,
+  "cache": "disk",
+  "lr0": 0.01,
+  "optimizer": "SGD",
+  "patience": 50,
+  "save_period": 5,
+  "workers": 1,
+  "device": "0",
+  "amp": true,
+  "seed": 42,
+  "resume": true,
+  "ultralytics_root": "D:\\cyd\\Desktop\\yolo_web-main\\training\\ultralytics_custom",
+  "augment": {
+    "fliplr": 0.5,
+    "flipud": 0.1,
+    "degrees": 8.0,
+    "scale": 0.2,
+    "translate": 0.1
+  }
+}

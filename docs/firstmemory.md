@@ -436,3 +436,15 @@ python training/scripts/phase1_generate_data_yaml.py
 - 2026-03-16 16:40:14 | run_id=mbv3_full200_fresh_20260315_234917 | status=failed
 - 2026-03-16 22:45:17 | run_id=mbv3_full200_fresh_20260315_234917 | status=failed
 - 2026-03-17 10:53:08 | run_id=mbv3_full200_fresh_20260315_234917 | status=completed
+
+## 17. Phase3核查与Phase4启动（2026-03-17）
+
+- Phase3正式全量run确认完成：mbv3_full200_fresh_20260315_234917（200/200）。
+- Phase3对比YOLOv11-S基线：precision略升，但recall与mAP50/mAP50-95下降；当前阶段MBV3改造未优于基线总体检测效果。
+- 已执行保守清理：删除Phase3与ECA冒烟中的可再生中间大文件，保留best/last和所有核心可追踪文本资产。
+- 新增Phase4守护与观察脚本：training/scripts/run_phase4_resilient.ps1、training/scripts/reopen_phase4_watch.ps1。
+- 已增强phase4_train_yolo11s_mbv3_eca.py：支持checkpoint resume、fresh失败后可由守护脚本自动切resume、并自动写trianlog/firstmemory/run_summary。
+
+## 17. Phase4自动更新追踪
+- 2026-03-18 17:13:42 | run_id=mbv3_eca_20260317_114514 | status=failed
+- 2026-03-19 01:32:01 | run_id=mbv3_eca_20260317_114514 | status=completed

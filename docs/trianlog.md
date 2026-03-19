@@ -664,3 +664,179 @@ SystemError: <built-in function resize> returned a result with an exception set
 - attempt=3
 - exit_code=0
 
+## 2026-03-17 11:44:36 | Phase3核查与Phase4启动准备
+
+- Phase3最终确认目录：experiments/YOLOv11-S-MBV3/mbv3_full200_fresh_20260315_234917（run_summary.status=completed，results.csv到epoch 200）。
+- 参数核查：epochs=200, batch=6, workers=1, cache=disk, device=0，符合Phase3正式口径。
+- 核心可追踪资产已在Git：args.yaml, hyperparams.json, environment_snapshot.json, env.txt, results.csv, metrics_epoch.csv, train.log, run_summary.json。
+- 对比YOLOv11-S基线（baseline_full200_fresh_20260313_195344）：precision +0.00291，recall -0.00768，mAP50 -0.00864，mAP50-95 -0.02126。
+- 清理策略已执行：仅删除可再生中间产物（epoch*.pt、train/val可视化图片、曲线png），保留best.pt/last.pt与所有核心文本资产。
+- 清理清单：experiments/logs/phase_cleanup_deleted_20260317.txt。
+
+## 2026-03-17 11:45:05 | Phase4 watchdog start
+
+- mode=fresh
+- checkpoint=
+- epochs=200, batch=6, workers=1, cache=disk, device=0
+
+## 2026-03-17 11:45:15 | Phase4启动
+
+- run_id=mbv3_eca_20260317_114514
+- resume=False
+- checkpoint=N/A
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-17 12:03:56 | Phase4 cache=disk诊断与目录删除确认
+
+- 诊断结果：当前D盘可用空间约54.92GB，C盘可用空间约8.47GB；低于训练日志提示所需约281.6GB（含安全余量），因此train阶段发生disk cache降级。
+- 公平性判断：Phase3正式run日志可见val已进行36.7GB磁盘缓存；当前Phase4也为同口径训练参数并处于同一磁盘约束。严格来说cache=disk配置项未在train阶段完全生效，但Phase3/Phase4运行条件一致，横向公平性影响可控。
+- 已按用户要求整目录删除：
+- experiments/YOLOv11-S-MBV3/mbv3_full200_fresh_20260316_132521
+- experiments/YOLOv11-S-MBV3-ECA/mbv3_eca_20260310_172435
+- experiments/YOLOv11-S-MBV3-ECA/mbv3_eca_20260310_172509
+
+## 2026-03-18 17:13:42 | Phase4异常
+
+- run_id=mbv3_eca_20260317_114514
+- error=Caught MemoryError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\base.py", line 229, in load_image
+    im = np.load(fn)
+         ^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\numpy\lib\_npyio_impl.py", line 483, in load
+    return format.read_array(fid, allow_pickle=allow_pickle,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\numpy\lib\_format_impl.py", line 847, in read_array
+    array = numpy.fromfile(fp, dtype=dtype, count=count)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 34.9 MiB for an array with shape (36578304,) and data type uint8
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\base.py", line 376, in __getitem__
+    return self.transforms(self.get_image_and_label(index))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\base.py", line 389, in get_image_and_label
+    label["img"], label["ori_shape"], label["resized_shape"] = self.load_image(index)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\base.py", line 233, in load_image
+    im = imread(f, flags=self.cv2_flag)  # BGR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\utils\patches.py", line 34, in imread
+    file_bytes = np.fromfile(filename, np.uint8)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 4.88 MiB for an array with shape (5118149,) and data type uint8
+
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 487, in _do_train
+    self.metrics, self.fitness = self.validate()
+                                 ^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 715, in validate
+    metrics = self.validator(self)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\validator.py", line 203, in __call__
+    for batch_i, batch in enumerate(bar):
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\utils\tqdm.py", line 350, in __iter__
+    for item in self.iterable:
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\build.py", line 76, in __iter__
+    yield next(self.iterator)
+          ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 732, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1506, in _next_data
+    return self._process_data(data, worker_id)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1541, in _process_data
+    data.reraise()
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\_utils.py", line 768, in reraise
+    raise RuntimeError(msg) from None
+RuntimeError: Caught MemoryError in DataLoader worker process 0.
+Original Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\base.py", line 229, in load_image
+    im = np.load(fn)
+         ^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\numpy\lib\_npyio_impl.py", line 483, in load
+    return format.read_array(fid, allow_pickle=allow_pickle,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\numpy\lib\_format_impl.py", line 847, in read_array
+    array = numpy.fromfile(fp, dtype=dtype, count=count)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 34.9 MiB for an array with shape (36578304,) and data type uint8
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\worker.py", line 349, in _worker_loop
+    data = fetcher.fetch(index)  # type: ignore[possibly-undefined]
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\_utils\fetch.py", line 52, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+            ~~~~~~~~~~~~^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\base.py", line 376, in __getitem__
+    return self.transforms(self.get_image_and_label(index))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\base.py", line 389, in get_image_and_label
+    label["img"], label["ori_shape"], label["resized_shape"] = self.load_image(index)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\base.py", line 233, in load_image
+    im = imread(f, flags=self.cv2_flag)  # BGR
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\utils\patches.py", line 34, in imread
+    file_bytes = np.fromfile(filename, np.uint8)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+numpy._core._exceptions._ArrayMemoryError: Unable to allocate 4.88 MiB for an array with shape (5118149,) and data type uint8
+
+
+## 2026-03-18 17:13:47 | Phase4 watchdog retry
+
+- attempt=1
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_1_20260318_171347.log
+- retry_delay_seconds=20
+
+## 2026-03-18 17:13:47 | Phase4 watchdog switched to resume
+
+- attempt=1
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA\mbv3_eca_20260317_114514\weights\last.pt
+
+## 2026-03-18 17:14:18 | Phase4启动
+
+- run_id=mbv3_eca_20260317_114514
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA\mbv3_eca_20260317_114514\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-19 01:32:01 | Phase4完成
+
+- run_id=mbv3_eca_20260317_114514
+- results_csv=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA\mbv3_eca_20260317_114514\results.csv
+- train_log=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA\mbv3_eca_20260317_114514\train.log
+## 2026-03-19 01:32:04 | Phase4 watchdog completed
+
+- attempt=2
+- exit_code=0
+
