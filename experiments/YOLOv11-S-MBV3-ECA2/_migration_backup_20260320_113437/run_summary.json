@@ -1,0 +1,9 @@
+{
+  "run_id": "mbv3_eca2_smoke50_20260319_184000",
+  "run_dir": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S-MBV3-ECA2\\mbv3_eca2_smoke50_20260319_184000",
+  "elapsed_seconds": 12325.44,
+  "elapsed_hms": "03:25:25",
+  "status": "failed",
+  "error": "Pin memory thread exited unexpectedly",
+  "error_kind": "generic"
+}

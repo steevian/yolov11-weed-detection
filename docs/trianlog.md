@@ -866,3 +866,1680 @@ numpy._core._exceptions._ArrayMemoryError: Unable to allocate 4.88 MiB for an ar
 - YOLOv11-S-MBV3-ECA：mAP50=0.25014，mAP50-95=0.22382，FPS=43.35
 - 结论：在 full200 设置下，ECA 版本取得最高 mAP；S 基线保持最高 FPS。
 
+## 2026-03-19 18:40:01 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=False
+- checkpoint=N/A
+- epochs=50, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-19 22:05:25 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=Pin memory thread exited unexpectedly
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 487, in _do_train
+    self.metrics, self.fitness = self.validate()
+                                 ^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 715, in validate
+    metrics = self.validator(self)
+              ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\validator.py", line 203, in __call__
+    for batch_i, batch in enumerate(bar):
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\utils\tqdm.py", line 350, in __iter__
+    for item in self.iterable:
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\data\build.py", line 76, in __iter__
+    yield next(self.iterator)
+          ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 732, in __next__
+    data = self._next_data()
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1482, in _next_data
+    idx, data = self._get_data()
+                ^^^^^^^^^^^^^^^^
+  File "C:\Users\cyd\miniconda3\envs\weedweb_detection\Lib\site-packages\torch\utils\data\dataloader.py", line 1439, in _get_data
+    raise RuntimeError("Pin memory thread exited unexpectedly")
+RuntimeError: Pin memory thread exited unexpectedly
+
+## 2026-03-19 22:38:04 | Phase4 watchdog start
+
+- mode=resume
+- checkpoint=D:/cyd/Desktop/yolo_web-main/runs/detect/experiments/YOLOv11-S-MBV3-ECA2/mbv3_eca2_smoke50_20260319_184000/weights/last.pt
+- epochs=200, batch=6, workers=1, cache=disk, device=0
+
+## 2026-03-19 22:38:14 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\runs\detect\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 03:53:31 | Phase4完成
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- results_csv=D:\cyd\Desktop\yolo_web-main\runs\detect\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\results.csv
+- train_log=D:\cyd\Desktop\yolo_web-main\runs\detect\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\train.log
+## 2026-03-20 03:53:34 | Phase4 watchdog completed
+
+- attempt=1
+- exit_code=0
+
+## 2026-03-20 11:35:43 | Phase4 watchdog start
+
+- mode=resume
+- checkpoint=D:/cyd/Desktop/yolo_web-main/experiments/YOLOv11-S-MBV3-ECA2/mbv3_eca2_smoke50_20260319_184000/weights/last.pt
+- epochs=200, batch=6, workers=1, cache=disk, device=0
+
+## 2026-03-20 11:35:52 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:36:31 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:36:33 | Phase4 watchdog retry
+
+- attempt=1
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_1_20260320_113633.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:37:02 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:37:42 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:37:44 | Phase4 watchdog retry
+
+- attempt=2
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_2_20260320_113743.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:38:11 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:38:53 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:38:55 | Phase4 watchdog retry
+
+- attempt=3
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_3_20260320_113855.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:39:22 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:39:56 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:39:58 | Phase4 watchdog retry
+
+- attempt=4
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_4_20260320_113957.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:40:24 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:41:05 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:41:06 | Phase4 watchdog retry
+
+- attempt=5
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_5_20260320_114106.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:41:34 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:42:09 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:42:11 | Phase4 watchdog retry
+
+- attempt=6
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_6_20260320_114211.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:42:37 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:43:10 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:43:12 | Phase4 watchdog retry
+
+- attempt=7
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_7_20260320_114312.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:43:38 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:44:17 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:44:18 | Phase4 watchdog retry
+
+- attempt=8
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_8_20260320_114418.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:44:45 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:45:21 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:45:22 | Phase4 watchdog retry
+
+- attempt=9
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_9_20260320_114522.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:45:49 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:46:24 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:46:25 | Phase4 watchdog retry
+
+- attempt=10
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_10_20260320_114625.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:46:52 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:47:24 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:47:26 | Phase4 watchdog retry
+
+- attempt=11
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_11_20260320_114725.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:47:53 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:48:29 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:48:30 | Phase4 watchdog retry
+
+- attempt=12
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_12_20260320_114830.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:48:57 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:49:42 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:49:43 | Phase4 watchdog retry
+
+- attempt=13
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_13_20260320_114943.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:50:10 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:50:51 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:50:53 | Phase4 watchdog retry
+
+- attempt=14
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_14_20260320_115053.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:51:20 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:51:56 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:51:57 | Phase4 watchdog retry
+
+- attempt=15
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_15_20260320_115157.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:52:24 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:52:57 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:52:59 | Phase4 watchdog retry
+
+- attempt=16
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_16_20260320_115259.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:53:27 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:54:04 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:54:06 | Phase4 watchdog retry
+
+- attempt=17
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_17_20260320_115406.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:54:33 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:55:11 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:55:13 | Phase4 watchdog retry
+
+- attempt=18
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_18_20260320_115513.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:55:40 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:56:22 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:56:23 | Phase4 watchdog retry
+
+- attempt=19
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_19_20260320_115623.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:56:50 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:57:31 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:57:32 | Phase4 watchdog retry
+
+- attempt=20
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_20_20260320_115732.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:57:59 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:58:40 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:58:41 | Phase4 watchdog retry
+
+- attempt=21
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_21_20260320_115841.log
+- retry_delay_seconds=20
+
+## 2026-03-20 11:59:08 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 11:59:51 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 11:59:53 | Phase4 watchdog retry
+
+- attempt=22
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_22_20260320_115953.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:00:19 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:01:02 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:01:04 | Phase4 watchdog retry
+
+- attempt=23
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_23_20260320_120103.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:01:30 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:02:07 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:02:09 | Phase4 watchdog retry
+
+- attempt=24
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_24_20260320_120209.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:02:36 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:03:12 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:03:13 | Phase4 watchdog retry
+
+- attempt=25
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_25_20260320_120313.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:03:40 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:04:15 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:04:16 | Phase4 watchdog retry
+
+- attempt=26
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_26_20260320_120416.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:04:43 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:05:16 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:05:18 | Phase4 watchdog retry
+
+- attempt=27
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_27_20260320_120518.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:05:44 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:06:26 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:06:28 | Phase4 watchdog retry
+
+- attempt=28
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_28_20260320_120628.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:06:54 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:07:27 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:07:29 | Phase4 watchdog retry
+
+- attempt=29
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_29_20260320_120729.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:07:57 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:08:33 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:08:34 | Phase4 watchdog retry
+
+- attempt=30
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_30_20260320_120834.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:09:01 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:09:42 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:09:44 | Phase4 watchdog retry
+
+- attempt=31
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_31_20260320_120944.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:10:11 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:10:53 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:10:54 | Phase4 watchdog retry
+
+- attempt=32
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_32_20260320_121054.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:58:35 | Phase4 watchdog start
+
+- mode=resume
+- checkpoint=D:/cyd/Desktop/yolo_web-main/experiments/YOLOv11-S-MBV3-ECA2/mbv3_eca2_smoke50_20260319_184000/weights/last.pt
+- epochs=200, batch=6, workers=1, cache=disk, device=0
+
+## 2026-03-20 12:58:42 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 12:59:26 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 12:59:28 | Phase4 watchdog retry
+
+- attempt=1
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_1_20260320_125928.log
+- retry_delay_seconds=20
+
+## 2026-03-20 12:59:55 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:00:39 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 13:00:41 | Phase4 watchdog retry
+
+- attempt=2
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_2_20260320_130041.log
+- retry_delay_seconds=20
+
+## 2026-03-20 13:01:08 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:01:51 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 13:01:53 | Phase4 watchdog retry
+
+- attempt=3
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_3_20260320_130153.log
+- retry_delay_seconds=20
+
+## 2026-03-20 13:02:21 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:03:05 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 13:03:06 | Phase4 watchdog retry
+
+- attempt=4
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_4_20260320_130306.log
+- retry_delay_seconds=20
+
+## 2026-03-20 13:03:33 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:04:08 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 13:04:10 | Phase4 watchdog retry
+
+- attempt=5
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_5_20260320_130410.log
+- retry_delay_seconds=20
+
+## 2026-03-20 13:04:37 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:05:20 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 50 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 13:05:21 | Phase4 watchdog retry
+
+- attempt=6
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_6_20260320_130521.log
+- retry_delay_seconds=20
+
+## 2026-03-20 13:05:39 | Phase4 watchdog start
+
+- mode=resume
+- checkpoint=D:/cyd/Desktop/yolo_web-main/experiments/YOLOv11-S-MBV3-ECA2/mbv3_eca2_smoke50_20260319_184000/weights/last.pt
+- epochs=200, batch=6, workers=1, cache=disk, device=0
+
+## 2026-03-20 13:05:47 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:05:49 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:06:36 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 200 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 200 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 13:06:36 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 200 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 200 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 13:06:38 | Phase4 watchdog retry
+
+- attempt=1
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_1_20260320_130638.log
+- retry_delay_seconds=20
+
+## 2026-03-20 13:07:07 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:07:52 | Phase4异常
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- error=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 200 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+- error_kind=generic
+- traceback:
+- Traceback (most recent call last):
+  File "D:\cyd\Desktop\yolo_web-main\training\scripts\phase4_train_yolo11s_mbv3_eca.py", line 289, in main
+    train_results = model.train(**train_kwargs)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\model.py", line 774, in train
+    self.trainer.train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 244, in train
+    self._do_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 365, in _do_train
+    self._setup_train()
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 357, in _setup_train
+    self.resume_training(ckpt)
+  File "D:\cyd\Desktop\yolo_web-main\training\ultralytics_custom\ultralytics\engine\trainer.py", line 903, in resume_training
+    assert start_epoch > 0, (
+           ^^^^^^^^^^^^^^^
+AssertionError: D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt training to 200 epochs is finished, nothing to resume.
+Start a new training without resuming, i.e. 'yolo train model=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt'
+
+## 2026-03-20 13:07:53 | Phase4 watchdog retry
+
+- attempt=2
+- exit_code=2
+- failure_file=D:\cyd\Desktop\yolo_web-main\experiments\logs\phase4_failures\attempt_2_20260320_130753.log
+- retry_delay_seconds=20
+
+## 2026-03-20 13:08:21 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\last.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:10:33 | Phase4 watchdog start
+
+- mode=resume
+- checkpoint=D:/cyd/Desktop/yolo_web-main/experiments/YOLOv11-S-MBV3-ECA2/mbv3_eca2_smoke50_20260319_184000/weights/resume200_epoch45_patched.pt
+- epochs=200, batch=6, workers=1, cache=disk, device=0
+
+## 2026-03-20 13:10:40 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\resume200_epoch45_patched.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-20 13:15:30 | Phase4 watchdog start
+
+- mode=resume
+- checkpoint=D:/cyd/Desktop/yolo_web-main/experiments/YOLOv11-S-MBV3-ECA2/mbv3_eca2_smoke50_20260319_184000/weights/resume200_epoch45_patched.pt
+- epochs=200, batch=6, workers=1, cache=disk, device=0
+
+## 2026-03-20 13:15:37 | Phase4启动
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- resume=True
+- checkpoint=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\weights\resume200_epoch45_patched.pt
+- epochs=200, batch=6, workers=1, cache=disk, amp=True
+## 2026-03-21 14:45:11 | Phase4完成
+
+- run_id=mbv3_eca2_smoke50_20260319_184000
+- results_csv=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\results.csv
+- train_log=D:\cyd\Desktop\yolo_web-main\experiments\YOLOv11-S-MBV3-ECA2\mbv3_eca2_smoke50_20260319_184000\train.log
+## 2026-03-21 14:45:14 | Phase4 watchdog completed
+
+- attempt=1
+- exit_code=0
+
