@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts" name="layoutHeader">
-import { defineAsyncComponent } from 'vue';
+import { computed, defineAsyncComponent } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useTagsViewRoutes } from '@/utils/stores/tagsViewRoutes';
 

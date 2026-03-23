@@ -13,6 +13,21 @@
 					<div class="conf">
 						<div class="conf-label">设置最小置信度阈值</div>
 						<el-slider v-model="conf" :format-tooltip="formatTooltip" class="conf-slider" :min="0" :max="100" :step="1" />
+						<el-select v-model="state.selectedModel" class="model-select" placeholder="选择模型" @change="onModelChange">
+							<el-option v-for="item in state.modelOptions" :key="item.name" :label="item.name" :value="item.name" />
+						</el-select>
+					</div>
+					<div class="button-section">
+						<el-upload
+							ref="quickUploadRef"
+							class="quick-uploader"
+							:action="uploadAction"
+							:show-file-list="false"
+							:on-success="handleAvatarSuccessone"
+							:before-upload="beforeUpload"
+						>
+							<el-button type="info" class="predict-button" :disabled="state.isDetecting">上传杂草检测图片</el-button>
+						</el-upload>
 					</div>
 					<div class="button-section">
 						<el-button type="primary" @click="upData" class="predict-button" :disabled="state.isDetecting">
@@ -25,7 +40,7 @@
 			<el-card shadow="never" class="card preview-card">
 				<div class="img-container" ref="imgContainer">
 					<img :src="currentImageUrl" class="avatar" alt="检测图片" ref="imageRef" @load="onImageLoad" v-show="currentImageUrl" />
-					<canvas ref="canvasRef" class="detection-canvas" v-show="currentImageUrl"></canvas>
+					<canvas ref="canvasRef" class="detection-canvas" v-show="currentImageUrl" @click="handleCanvasClick"></canvas>
 
 					<el-upload
 						v-if="!currentImageUrl"
@@ -42,7 +57,7 @@
 								<Plus />
 							</el-icon>
 							<div class="upload-title">点击上传杂草图片</div>
-							<div class="upload-note">支持 JPG / PNG，单张 ≤ 5MB</div>
+							<div class="upload-note">支持 JPG / PNG，单张 ≤ 50MB</div>
 						</div>
 					</el-upload>
 				</div>
@@ -66,8 +81,8 @@
 
 				<div class="detections-detail" v-if="detections.length > 0">
 					<div class="detection-count">共检测到 {{ detections.length }} 个目标</div>
-					<el-table :data="detections" style="width: 100%; margin-top: 10px;" size="small">
-						<el-table-column prop="weed_name" label="杂草名称" width="120"></el-table-column>
+					<el-table :data="detections" style="width: 100%; margin-top: 10px;" size="small" :max-height="300">
+						<el-table-column prop="weed_name" label="类别名称" width="120"></el-table-column>
 						<el-table-column prop="confidence" label="置信度" width="100">
 							<template #default="{ row }">
 								{{ (row.confidence * 100).toFixed(2) }}%
@@ -112,6 +127,7 @@ const imageUrl = ref(''); // 上传的原图临时地址
 const detectedImageUrl = ref(''); // 后端返回的带检测框图片地址（相对路径，走代理）
 const conf = ref(50); // 置信度默认50%
 const uploadFile = ref<UploadInstance>();
+const quickUploadRef = ref<UploadInstance>();
 const stores = useUserInfo();
 const { userInfos } = storeToRefs(stores);
 
@@ -135,7 +151,53 @@ const state = reactive({
 	predictionResult: { label: '', confidence: '', allTime: '' },
 	form: { username: '', inputImg: '', conf: 0, startTime: '' }, // inputImg: string, conf: number
 	isDetecting: false, // 检测状态锁，防止重复请求
+	modelOptions: [] as Array<{ name: string; path?: string; selected?: boolean }>,
+	selectedModel: '',
 });
+
+const getDetectionColor = (det: any, index: number) => {
+	const name = String(det?.weed_name || `cls-${index}`);
+	let hash = 0;
+	for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+	const hue = hash % 360;
+	return {
+		stroke: `hsl(${hue}, 90%, 45%)`,
+		fill: `hsla(${hue}, 90%, 45%, 0.14)`,
+		label: `hsl(${hue}, 90%, 38%)`,
+	};
+};
+
+const getScaledBox = (bbox: any) => {
+	if (!canvasRef.value || !imageRef.value) return null;
+	const canvas = canvasRef.value;
+	const img = imageRef.value;
+	const naturalW = img.naturalWidth || canvas.width;
+	const naturalH = img.naturalHeight || canvas.height;
+	const sx = canvas.width / naturalW;
+	const sy = canvas.height / naturalH;
+
+	let x = 0;
+	let y = 0;
+	let width = 0;
+	let height = 0;
+	if (bbox.x !== undefined && bbox.y !== undefined && bbox.width !== undefined && bbox.height !== undefined) {
+		x = bbox.x;
+		y = bbox.y;
+		width = bbox.width;
+		height = bbox.height;
+	} else if (bbox.x1 !== undefined && bbox.y1 !== undefined && bbox.x2 !== undefined && bbox.y2 !== undefined) {
+		x = bbox.x1;
+		y = bbox.y1;
+		width = bbox.x2 - bbox.x1;
+		height = bbox.y2 - bbox.y1;
+	}
+	return {
+		x: x * sx,
+		y: y * sy,
+		width: width * sx,
+		height: height * sy,
+	};
+};
 
 // 置信度滑块格式化
 const formatTooltip = (val: number) => val / 100;
@@ -150,9 +212,9 @@ const beforeUpload = (file: File) => {
 	}
 	
 	// 检查文件大小（限制5MB）
-	const isLt5M = file.size / 1024 / 1024 < 5;
+	const isLt5M = file.size / 1024 / 1024 < 50;
 	if (!isLt5M) {
-		ElMessage.error('图片大小不能超过5MB！');
+		ElMessage.error('图片大小不能超过50MB！');
 		return false;
 	}
 	
@@ -175,6 +237,11 @@ const handleAvatarSuccessone: UploadProps['onSuccess'] = (response, uploadFile) 
 	
 	// 生成原图临时预览地址（本地blob，无需代理）
 	imageUrl.value = URL.createObjectURL(uploadFile.raw!);
+	// 强制回到顶部，保证操作控件始终可见
+	nextTick(() => {
+		const host = document.querySelector('.system-predict-padding') as HTMLElement | null;
+		if (host) host.scrollTop = 0;
+	});
 	// 适配后端上传响应格式，获取图片标识
 	state.img = response.data || response.fileName || '';
 	ElMessage.success('杂草检测图片上传成功！');
@@ -221,42 +288,35 @@ const drawDetections = () => {
 	// 绘制每个检测框
 	detections.value.forEach((det, index) => {
 		const bbox = det.bbox;
-		
-		// 获取坐标（支持两种格式）
-		let x, y, width, height;
-		
-		if (bbox.x !== undefined && bbox.y !== undefined && bbox.width !== undefined && bbox.height !== undefined) {
-			// 格式1: {x, y, width, height}
-			x = bbox.x;
-			y = bbox.y;
-			width = bbox.width;
-			height = bbox.height;
-		} else if (bbox.x1 !== undefined && bbox.y1 !== undefined && bbox.x2 !== undefined && bbox.y2 !== undefined) {
-			// 格式2: {x1, y1, x2, y2}
-			x = bbox.x1;
-			y = bbox.y1;
-			width = bbox.x2 - bbox.x1;
-			height = bbox.y2 - bbox.y1;
-		} else {
+		const scaled = getScaledBox(bbox);
+		if (!scaled) {
 			// 坐标格式不支持
 			console.warn('不支持的bbox格式:', bbox);
 			return;
 		}
+		const { x, y, width, height } = scaled;
 		
 		// 判断是否高亮
 		const isHighlighted = highlightedIndex.value === index;
+		const color = getDetectionColor(det, index);
 		
 		// 设置绘制样式
-		ctx.strokeStyle = isHighlighted ? '#ff0000' : '#00ff00'; // 高亮红色，普通绿色
-		ctx.lineWidth = isHighlighted ? 3 : 2;
-		ctx.fillStyle = isHighlighted ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 255, 0, 0.1)';
+		ctx.strokeStyle = isHighlighted ? '#ff2d55' : color.stroke;
+		ctx.lineWidth = isHighlighted ? 4 : 2;
+		ctx.fillStyle = isHighlighted ? 'rgba(255, 45, 85, 0.20)' : color.fill;
 		
 		// 绘制矩形框
 		ctx.strokeRect(x, y, width, height);
 		ctx.fillRect(x, y, width, height);
+		if (isHighlighted) {
+			ctx.shadowColor = 'rgba(255, 45, 85, 0.55)';
+			ctx.shadowBlur = 12;
+			ctx.strokeRect(x, y, width, height);
+			ctx.shadowBlur = 0;
+		}
 		
 		// 绘制标签背景
-		ctx.fillStyle = isHighlighted ? '#ff0000' : '#00ff00';
+		ctx.fillStyle = isHighlighted ? '#ff2d55' : color.label;
 		ctx.font = '14px Arial';
 		const text = `${det.weed_name} ${(det.confidence * 100).toFixed(1)}%`;
 		const textWidth = ctx.measureText(text).width;
@@ -306,6 +366,24 @@ const drawDetections = () => {
 	});
 };
 
+const handleCanvasClick = (e: MouseEvent) => {
+	if (!canvasRef.value || detections.value.length === 0) return;
+	const rect = canvasRef.value.getBoundingClientRect();
+	const x = e.clientX - rect.left;
+	const y = e.clientY - rect.top;
+
+	for (let i = detections.value.length - 1; i >= 0; i--) {
+		const scaled = getScaledBox(detections.value[i].bbox);
+		if (!scaled) continue;
+		if (x >= scaled.x && x <= scaled.x + scaled.width && y >= scaled.y && y <= scaled.y + scaled.height) {
+			highlightDetection(i);
+			return;
+		}
+	}
+	highlightedIndex.value = null;
+	drawDetections();
+};
+
 // 高亮指定检测框（原有逻辑不变）
 const highlightDetection = (index: number) => {
 	if (highlightedIndex.value === index) {
@@ -332,6 +410,9 @@ const upData = async () => {
 	state.form.username = userInfos.value.userName || 'default_user';
 	state.form.inputImg = state.img; // string
 	state.form.startTime = formatDate(new Date(), 'YYYY-MM-DD HH:mm:ss'); // 修复时间格式符
+	if (state.selectedModel) {
+		(state.form as any).model_name = state.selectedModel;
+	}
 
 	try {
 		// 🔥 核心修改1：检测接口改为/predict，匹配后端main.py和vite代理配置
@@ -493,6 +574,48 @@ const checkFlaskConnection = async () => {
   }
 };
 
+const loadModelOptions = async () => {
+	try {
+		let res: any;
+		try {
+			res = await request.get('/flask/file_names');
+		} catch {
+			res = await request.get('/file_names');
+		}
+		const data = res?.data || res || {};
+		state.modelOptions = data.weight_items || [];
+		const selected = state.modelOptions.find((x) => x.selected);
+		state.selectedModel = selected?.name || data.current_model || state.modelOptions[0]?.name || '';
+		if (!state.modelOptions.length) {
+			ElMessage.warning('weights 目录未找到可用 .pt 模型');
+		}
+	} catch (error) {
+		state.modelOptions = [];
+		state.selectedModel = '';
+		ElMessage.warning('模型列表加载失败，默认使用当前部署模型');
+	}
+};
+
+const onModelChange = async (modelName: string) => {
+	if (!modelName) return;
+	try {
+		let res: any;
+		try {
+			res = await request.post('/flask/set_model', { model_name: modelName });
+		} catch {
+			res = await request.post('/set_model', { model_name: modelName });
+		}
+		const data = res?.data || res || {};
+		if (data.status === 200 || data.code === 0) {
+			ElMessage.success(data.message || `已切换模型: ${modelName}`);
+		} else {
+			ElMessage.error(data.message || '模型切换失败');
+		}
+	} catch (error) {
+		ElMessage.error('模型切换失败，请检查后端服务');
+	}
+};
+
 
 // 保证置信度滑块和state.form.conf实时同步
 import { watch } from 'vue';
@@ -513,6 +636,7 @@ onMounted(() => {
 	}
 	// 初始化置信度
 	state.form.conf = conf.value / 100;
+	loadModelOptions();
 });
 
 // 保证置信度滑块和state.form.conf实时同步
@@ -533,14 +657,18 @@ onUnmounted(() => {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+	position: relative;
+	isolation: isolate;
 
 	.system-predict-padding {
 		padding: 16px;
 		height: 100%;
+		min-height: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 12px;
-		overflow: auto;
+		overflow-y: auto;
+		overflow-x: hidden;
 	}
 }
 
@@ -567,6 +695,10 @@ onUnmounted(() => {
 	border-radius: 14px;
 	border: 1px solid var(--el-border-color-light);
 	box-shadow: 0 8px 24px rgba(17, 24, 39, 0.06);
+	position: sticky;
+	top: 8px;
+	z-index: 200;
+	background: #fff;
 }
 
 .action-row {
@@ -583,6 +715,7 @@ onUnmounted(() => {
 	display: flex;
 	align-items: center;
 	gap: 14px;
+	flex-wrap: wrap;
 }
 
 .conf-label {
@@ -596,9 +729,13 @@ onUnmounted(() => {
 	width: 100%;
 }
 
+.model-select {
+	width: 220px;
+}
+
 .card {
 	width: 100%;
-	flex: 1;
+	flex: 0 0 auto;
 	border-radius: 14px;
 	margin-top: 0;
 	display: flex;
@@ -612,6 +749,10 @@ onUnmounted(() => {
 
 .preview-card {
 	min-height: 420px;
+	max-height: 62vh;
+	position: relative;
+	z-index: 1;
+	overflow: hidden;
 }
 
 // 图片容器
@@ -622,6 +763,7 @@ onUnmounted(() => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	overflow: hidden;
 }
 
 .avatar-uploader {
@@ -673,6 +815,8 @@ onUnmounted(() => {
 	object-fit: contain;
 	border-radius: 10px;
 	box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+	position: relative;
+	z-index: 1;
 }
 
 // 检测框画布
@@ -682,7 +826,9 @@ onUnmounted(() => {
 	left: 0;
 	width: 100%;
 	height: 100%;
-	pointer-events: none;
+	pointer-events: auto;
+	cursor: crosshair;
+	z-index: 2;
 }
 
 .el-icon.avatar-uploader-icon {
@@ -709,6 +855,7 @@ onUnmounted(() => {
 	padding: 10px;
 	border: 1px solid var(--el-border-color-light);
 	box-shadow: 0 10px 28px rgba(17, 24, 39, 0.06);
+	overflow: visible;
 }
 
 .bottom {
@@ -741,6 +888,9 @@ onUnmounted(() => {
 .detections-detail {
 	margin-top: 15px;
 	padding: 0 4px;
+	max-height: 360px;
+	overflow-y: auto;
+	overflow-x: hidden;
 	
 	.detection-count {
 		font-size: 14px;
@@ -755,10 +905,21 @@ onUnmounted(() => {
 		overflow: hidden;
 		border: 1px solid #e5e7eb;
 
+		.el-table__body-wrapper {
+			max-height: 260px;
+			overflow-y: auto;
+		}
+
 		.el-table__row:hover {
 			background-color: #eef2ff;
 			cursor: pointer;
 		}
+	}
+}
+
+.quick-uploader {
+	:deep(.el-upload) {
+		display: block;
 	}
 }
 

@@ -13,6 +13,9 @@
 					<div class="conf">
 						<div class="conf-label">设置最小置信度阈值</div>
 						<el-slider v-model="conf" :format-tooltip="formatTooltip" class="conf-slider" :min="0" :max="100" :step="1" />
+						<el-select v-model="state.selectedModel" class="model-select" placeholder="选择模型" @change="onModelChange">
+							<el-option v-for="item in state.modelOptions" :key="item.name" :label="item.name" :value="item.name" />
+						</el-select>
 					</div>
 
 					<el-upload
@@ -127,11 +130,14 @@ const state = reactive({
 	percentage: 0,
 	isShow: false,
 	isDetecting: false,
+	modelOptions: [] as Array<{ name: string; path?: string; selected?: boolean }>,
+	selectedModel: '',
 	form: {
 		username: '',
 		inputVideo: null as any,
 		conf: 0.5,
-		startTime: ''
+		startTime: '',
+		model_name: ''
 	},
 });
 
@@ -391,6 +397,7 @@ const upData = async () => {
 		
 		// 使用修复的时间格式函数
 		state.form.startTime = formatDateTime();
+		state.form.model_name = state.selectedModel || '';
 		console.log('开始视频检测，参数:', JSON.stringify(state.form));
 		
 		// 停止当前视频播放并清空路径
@@ -513,6 +520,48 @@ const checkFlaskConnection = async () => {
 	}
 };
 
+const loadModelOptions = async () => {
+	try {
+		let res: any;
+		try {
+			res = await request.get('/flask/file_names');
+		} catch {
+			res = await request.get('/file_names');
+		}
+		const data = res?.data || res || {};
+		state.modelOptions = data.weight_items || [];
+		const selected = state.modelOptions.find((x) => x.selected);
+		state.selectedModel = selected?.name || data.current_model || state.modelOptions[0]?.name || '';
+		if (!state.modelOptions.length) {
+			ElMessage.warning('weights 目录未找到可用 .pt 模型');
+		}
+	} catch {
+		state.modelOptions = [];
+		state.selectedModel = '';
+		ElMessage.warning('模型列表加载失败，默认使用当前部署模型');
+	}
+};
+
+const onModelChange = async (modelName: string) => {
+	if (!modelName) return;
+	try {
+		let res: any;
+		try {
+			res = await request.post('/flask/set_model', { model_name: modelName });
+		} catch {
+			res = await request.post('/set_model', { model_name: modelName });
+		}
+		const data = res?.data || res || {};
+		if (data.status === 200 || data.code === 0) {
+			ElMessage.success(data.message || `已切换模型: ${modelName}`);
+		} else {
+			ElMessage.error(data.message || '模型切换失败');
+		}
+	} catch {
+		ElMessage.error('模型切换失败，请检查后端服务');
+	}
+};
+
 // 页面激活时：重置状态
 onActivated(() => {
 	console.log('视频检测页面激活');
@@ -549,6 +598,8 @@ onMounted(async () => {
 	} else {
 		ElMessage.warning('请确保Flask服务正在运行');
 	}
+
+	await loadModelOptions();
 	
 	// 开发环境下显示调试面板
 	if (import.meta.env.DEV) {
@@ -613,6 +664,7 @@ onMounted(async () => {
 	display: flex;
 	align-items: center;
 	gap: 14px;
+	flex-wrap: wrap;
 }
 
 .conf-label {
@@ -624,6 +676,10 @@ onMounted(async () => {
 .conf-slider {
 	max-width: 340px;
 	width: 100%;
+}
+
+.model-select {
+	width: 220px;
 }
 
 .uploader-inline {

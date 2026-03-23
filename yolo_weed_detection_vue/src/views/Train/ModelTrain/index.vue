@@ -4,7 +4,7 @@
 			<div class="workbench-title-row">
 				<div>
 					<h3 class="workbench-title">模型训练</h3>
-					<p class="workbench-subtitle">管理员配置杂草检测训练任务。当前为接口预留阶段，不执行真实训练。</p>
+					<p class="workbench-subtitle">管理员可创建并启动训练任务，支持查看任务记录与核心指标。</p>
 				</div>
 			</div>
 
@@ -46,7 +46,7 @@
 				<template #header>
 					<div class="card-header-row">
 						<span>训练任务记录</span>
-						<el-tag type="warning">placeholder</el-tag>
+						<el-tag type="success">runtime</el-tag>
 					</div>
 				</template>
 				<el-table :data="tasks" v-loading="loading" style="width: 100%" @row-click="onSelectTask" row-key="taskId" highlight-current-row>
@@ -63,7 +63,10 @@
 				<template #header>
 					<div class="card-header-row">
 						<span>任务详情 - {{ selectedTask.taskName }}</span>
-						<el-tag type="info">{{ selectedTask.status || 'unknown' }}</el-tag>
+						<div class="header-actions">
+							<el-tag type="info">{{ selectedTask.status || 'unknown' }}</el-tag>
+							<el-button type="primary" :loading="submitting" @click="onSubmit">提交训练任务</el-button>
+						</div>
 					</div>
 				</template>
 				<div class="detail-metrics">
@@ -170,6 +173,12 @@ onMounted(() => {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+}
+
+.header-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
 }
 
 .detail-metrics {

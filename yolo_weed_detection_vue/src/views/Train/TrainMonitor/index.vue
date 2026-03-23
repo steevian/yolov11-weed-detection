@@ -4,7 +4,7 @@
 			<div class="workbench-title-row">
 				<div>
 					<h3 class="workbench-title">训练监控</h3>
-					<p class="workbench-subtitle">监控杂草检测训练任务进度与核心指标。当前数据为接口占位输出。</p>
+					<p class="workbench-subtitle">监控杂草检测训练任务进度与核心指标，支持查看轮次曲线与阶段结果。</p>
 				</div>
 			</div>
 
@@ -56,7 +56,7 @@
 				<template #header>
 					<div class="card-header-row">
 						<span>轮次指标</span>
-						<el-tag type="warning">placeholder</el-tag>
+						<el-tag type="success">runtime</el-tag>
 					</div>
 				</template>
 				<el-table :data="epochs" v-loading="loading" style="width: 100%">

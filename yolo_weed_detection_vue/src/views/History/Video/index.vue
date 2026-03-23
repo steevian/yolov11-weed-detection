@@ -45,11 +45,12 @@
 								class="video" 
 								controls 
 								preload="metadata" 
+								playsinline
+								:src="getOriginalVideoUrl(scope.row.input_video)"
 								:poster="getVideoPoster(scope.row.input_video)"
-								:key="scope.row.input_video + uniqueKey"
+								:key="getOriginalVideoUrl(scope.row.input_video) + uniqueKey"
 								@error="onVideoError(scope.row.input_video, '原视频')"
 							>
-								<source :src="getVideoUrl(scope.row.input_video)" type="video/mp4" />
 								您的浏览器不支持视频播放
 							</video>
 							<div class="video-info">
@@ -66,11 +67,12 @@
 								class="video" 
 								controls 
 								preload="metadata" 
+								playsinline
+								:src="getVideoUrl(scope.row.out_video)"
 								:poster="getVideoPoster(scope.row.out_video)"
 								:key="scope.row.out_video + uniqueKey"
 								@error="onVideoError(scope.row.out_video, '结果视频')"
 							>
-								<source :src="getVideoUrl(scope.row.out_video)" type="video/mp4" />
 								您的浏览器不支持视频播放
 							</video>
 							<div class="video-info">
@@ -225,6 +227,20 @@ const getVideoUrl = (videoPath: string): string => {
   
   // 4. 默认添加基础路径
 	return `/${videoPath}`;
+};
+
+const getOriginalVideoUrl = (videoPath: string): string => {
+	const normalized = getVideoUrl(videoPath);
+	if (normalized.startsWith('/uploads/')) {
+		return normalized;
+	}
+	if (normalized.startsWith('/results/')) {
+		return `/flask/results/${normalized.substring('/results/'.length)}`;
+	}
+	if (normalized.startsWith('/runs/')) {
+		return `/flask/runs/${normalized.substring('/runs/'.length)}`;
+	}
+	return normalized;
 };
 
 const parseUtcToDate = (value: string): Date | null => {

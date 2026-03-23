@@ -10,20 +10,14 @@
 
       <el-card shadow="never" class="action-card">
         <div class="header action-row">
-				<div class="conf" style="display: flex; flex-direction: row; align-items: center;">
-					<div style="font-size: 14px; margin-right: 20px; color: #909399;">
-						设置最小置信度阈值
-					</div>
-					<el-slider 
-						v-model="conf" 
-						:format-tooltip="formatTooltip" 
-						style="width: 280px;" 
-						:min="0" 
-						:max="100" 
-						:step="1" 
-					/>
-				</div>
-				<div class="button-section" style="margin-left: 20px">
+        <div class="conf">
+          <div class="conf-label">设置最小置信度阈值</div>
+          <el-slider v-model="conf" :format-tooltip="formatTooltip" class="conf-slider" :min="0" :max="100" :step="1" />
+          <el-select v-model="selectedModel" class="model-select" placeholder="选择模型" @change="onModelChange">
+            <el-option v-for="item in modelOptions" :key="item.name" :label="item.name" :value="item.name" />
+          </el-select>
+        </div>
+        <div class="button-section">
 					<el-button 
 						type="primary" 
 						@click="handleStartCamera" 
@@ -33,7 +27,7 @@
 						{{ isCameraActive ? '检测中' : '开启摄像头检测' }}
 					</el-button>
 				</div>
-                <div class="button-section" style="margin-left: 20px">
+        <div class="button-section">
 					<el-button 
 						type="warning" 
 						@click="handleStopCamera" 
@@ -121,6 +115,8 @@ const cameraStreamImgRef = ref<HTMLImageElement | null>(null); // 视频流img�
 // 提示消息相关
 const cameraStatusMessage = ref<string>('');     // 状态消息
 const cameraStatusType = ref<CameraStatusType>('info'); // 状态类型
+const modelOptions = ref<Array<{ name: string; path?: string; selected?: boolean }>>([]);
+const selectedModel = ref<string>('');
 
 // ============================ 用户信息与环境 ============================
 const userStore = useUserInfo();
@@ -299,7 +295,8 @@ const startCamera = async (): Promise<void> => {
     formData.value = {
       username: userInfos.value?.userName || 'default_user',
       conf: conf.value / 100,
-      startTime: formatDate(new Date(), 'YYYY-MM-DD HH:mm:ss')
+      startTime: formatDate(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+      model_name: selectedModel.value
     };
     
     // 5. 构建MJPEG流URL
@@ -307,6 +304,7 @@ const startCamera = async (): Promise<void> => {
       username: formData.value.username,
       conf: formData.value.conf.toString(),
       startTime: formData.value.startTime,
+      model_name: selectedModel.value || '',
       t: Date.now().toString()
     }).toString();
     
@@ -482,6 +480,48 @@ const checkFlaskConnection = async (): Promise<void> => {
   }
 };
 
+const loadModelOptions = async (): Promise<void> => {
+  try {
+    let res: any;
+    try {
+      res = await request.get('/flask/file_names');
+    } catch {
+      res = await request.get('/file_names');
+    }
+    const data = res?.data || res || {};
+    modelOptions.value = data.weight_items || [];
+    const selected = modelOptions.value.find((x) => x.selected);
+    selectedModel.value = selected?.name || data.current_model || modelOptions.value[0]?.name || '';
+    if (!modelOptions.value.length) {
+      ElMessage.warning('weights 目录未找到可用 .pt 模型');
+    }
+  } catch {
+    modelOptions.value = [];
+    selectedModel.value = '';
+    ElMessage.warning('模型列表加载失败，默认使用当前部署模型');
+  }
+};
+
+const onModelChange = async (modelName: string): Promise<void> => {
+  if (!modelName) return;
+  try {
+    let res: any;
+    try {
+      res = await request.post('/flask/set_model', { model_name: modelName });
+    } catch {
+      res = await request.post('/set_model', { model_name: modelName });
+    }
+    const data = res?.data || res || {};
+    if (data.status === 200 || data.code === 0) {
+      ElMessage.success(data.message || `已切换模型: ${modelName}`);
+    } else {
+      ElMessage.error(data.message || '模型切换失败');
+    }
+  } catch {
+    ElMessage.error('模型切换失败，请检查后端服务');
+  }
+};
+
 // ============================ 生命周期 ============================
 /**
  * 页面挂载时初始化
@@ -496,6 +536,7 @@ onMounted(async () => {
   
   // 检查Flask连接
   await checkFlaskConnection();
+  await loadModelOptions();
 });
 
 /**
@@ -611,17 +652,34 @@ watch(conf, () => {
 .header {
   width: 100%;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  font-size: 20px;
   flex-wrap: wrap;
-  gap: 15px;
-  padding: 15px;
-  border-bottom: 2px solid #e5e7eb;
-  margin-bottom: 20px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  gap: 12px;
+}
+
+.conf {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.conf-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.conf-slider {
+  max-width: 340px;
+  width: 100%;
+}
+
+.model-select {
+  width: 220px;
 }
 
 .cards {
@@ -688,7 +746,7 @@ watch(conf, () => {
 .button-section {
   display: flex;
   justify-content: center;
-  min-width: 180px;
+  min-width: 170px;
   
   .predict-button {
     width: 100%;

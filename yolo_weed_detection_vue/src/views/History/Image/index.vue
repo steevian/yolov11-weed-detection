@@ -84,6 +84,10 @@
 						<el-image 
 							:src="getImageUrl(scope.row.input_img)" 
 							:preview-src-list="[getImageUrl(scope.row.input_img)]"
+							:preview-teleported="true"
+							:zoom-rate="1.2"
+							:max-scale="7"
+							:min-scale="0.2"
 							fit="cover"
 							style="width: 120px; height: 80px; border-radius: 4px;"
 							hide-on-click-modal
@@ -110,6 +114,10 @@
 							v-if="scope.row.out_img"
 							:src="getImageUrl(scope.row.out_img)" 
 							:preview-src-list="[getImageUrl(scope.row.out_img)]"
+							:preview-teleported="true"
+							:zoom-rate="1.2"
+							:max-scale="7"
+							:min-scale="0.2"
 							fit="cover"
 							style="width: 120px; height: 80px; border-radius: 4px;"
 							lazy

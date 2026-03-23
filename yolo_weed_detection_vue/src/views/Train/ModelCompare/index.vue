@@ -34,7 +34,7 @@
 				<template #header>
 					<div class="card-header-row">
 						<span>比较结果</span>
-						<el-tag type="warning">placeholder</el-tag>
+						<el-tag type="success">runtime</el-tag>
 					</div>
 				</template>
 				<el-table :data="metricRows" v-loading="loading" style="width: 100%">

@@ -8,7 +8,10 @@ ssl._create_default_https_context = ssl._create_unverified_context
 import json
 import csv
 import os
+import sys
+import time
 import subprocess
+from pathlib import Path
 import cv2
 import requests
 import torch
@@ -58,6 +61,14 @@ def to_utc_iso_z(value) -> str:
         dt = dt.astimezone(timezone.utc)
 
     return dt.replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+
+# 优先使用仓库内 custom ultralytics（含 ECA 自定义模块）
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(CURRENT_DIR)
+CUSTOM_ULTRALYTICS_ROOT = os.path.join(REPO_ROOT, 'training', 'ultralytics_custom')
+if os.path.isdir(CUSTOM_ULTRALYTICS_ROOT) and CUSTOM_ULTRALYTICS_ROOT not in sys.path:
+    sys.path.insert(0, CUSTOM_ULTRALYTICS_ROOT)
+
 from ultralytics import YOLO
 from flask_socketio import SocketIO, emit
 import jwt
@@ -66,6 +77,17 @@ from user_manager import UserManager
 from flask_cors import CORS
 from core.settings import get_app_config
 from core.database import get_sqlite_conn
+try:
+    from PIL import Image, ImageDraw, ImageFont
+except Exception:
+    Image = None
+    ImageDraw = None
+    ImageFont = None
+
+try:
+    import yaml
+except Exception:
+    yaml = None
 
 class DatabaseManager:
     """SQLite 数据库管理器 - 修复路径问题版本"""
@@ -567,15 +589,17 @@ class VideoProcessingApp:
         # 新增：初始化用户管理器
         self.user_manager = UserManager(db_path=self.config.sqlite_db_path)
         
-        # 核心指定：你的weed_best.pt模型路径（固定死，不修改）
+        # 核心指定：当前部署模型路径（仅替换模型文件名，保持原流程不变）
         self.weights_root = os.path.join(self.BASE_DIR, "weights")
-        self.weed_model_name = "weed_best.pt"
+        self.weed_model_name = "eca2-1.pt"
         self.weed_model_path = os.path.join(self.weights_root, self.weed_model_name)
+        self.weed_classes_raw = []
         # 提前加载杂草检测模型（强制加载本地模型，不存在直接报错）
         self.load_weed_model()
         
-        # 根据模型实际类别设置
-        self.weed_classes = ["杂草"] if not hasattr(self.weed_model, 'names') else list(self.weed_model.names.values())
+        # 根据模型实际类别设置（load_weed_model 内已做中文化）
+        if not hasattr(self, 'weed_classes') or not self.weed_classes:
+            self.weed_classes = ["杂草"]
         
         # 摄像头相关实例变量
         self.camera_cap = None
@@ -601,8 +625,14 @@ class VideoProcessingApp:
         self.video_process_progress = 0
         # 新增：当前处理的视频线程
         self.current_video_thread = None
-        # 训练管理占位任务（仅页面联调用，不执行真实训练）
+        # 训练管理运行态（轻量持久化 + 子进程调度）
         self.train_placeholder_tasks = []
+        self.train_processes = {}
+        self.repo_root = os.path.dirname(self.BASE_DIR)
+        self.train_runtime_dir = os.path.join(self.repo_root, 'experiments', 'logs')
+        self.train_runtime_state_file = os.path.join(self.train_runtime_dir, 'train_tasks_runtime.json')
+        os.makedirs(self.train_runtime_dir, exist_ok=True)
+        self._load_train_runtime_tasks()
 
     def create_directories(self):
         """创建必要的目录（基于Flask项目根目录）"""
@@ -617,10 +647,254 @@ class VideoProcessingApp:
             os.makedirs(dir_path, exist_ok=True)
             print(f"ℹ️  确保目录存在: {dir_path}")
 
+    def _to_chinese_class_name(self, class_name):
+        """将模型类别名映射为中文，未命中时保持原名。"""
+        mapping = {
+            "Carpetweed": "地锦草",
+            "Eclipta": "鳢肠",
+            "Goosegrass": "牛筋草",
+            "Lambsquarters": "藜",
+            "Morningglory": "牵牛",
+            "Ragweed": "豚草",
+            "Palmer Amaranth": "帕尔默苋",
+            "Purslane": "马齿苋",
+            "Spotted spurge": "斑地锦",
+            "Waterhemp": "水麻苋",
+        }
+        if class_name is None:
+            return "杂草"
+        return mapping.get(str(class_name), str(class_name))
+
+    def _build_localized_model_names(self, names):
+        """兼容 list/dict 两种 YOLO names 结构，并返回中文化后的同结构数据。"""
+        if isinstance(names, dict):
+            return {k: self._to_chinese_class_name(v) for k, v in names.items()}
+        if isinstance(names, list):
+            return [self._to_chinese_class_name(v) for v in names]
+        return names
+
+    def _extract_raw_model_names(self, names):
+        """将 YOLO names 标准化为原始类名列表。"""
+        if isinstance(names, dict):
+            return [str(v) for _, v in sorted(names.items(), key=lambda kv: int(kv[0]))]
+        if isinstance(names, list):
+            return [str(v) for v in names]
+        return []
+
+    def _detect_chinese_font_path(self):
+        """尽量选择系统中可用的中文字体。"""
+        candidates = [
+            r"C:\Windows\Fonts\msyh.ttc",
+            r"C:\Windows\Fonts\simhei.ttf",
+            r"C:\Windows\Fonts\simsun.ttc",
+        ]
+        for fp in candidates:
+            if os.path.isfile(fp):
+                return fp
+        return None
+
+    def _get_ffmpeg_executable(self):
+        """定位 ffmpeg 可执行文件，兼容 PATH/环境变量/常见目录。"""
+        candidates = [
+            os.getenv('FFMPEG_PATH', '').strip(),
+            shutil.which('ffmpeg') or '',
+            r'd:\cyd\Desktop\ffmpeg-2026-01-19-git-43dbc011fa-full_build\bin\ffmpeg.exe',
+            r'C:\ffmpeg\bin\ffmpeg.exe',
+            os.path.join(os.path.dirname(sys.executable), 'ffmpeg.exe'),
+            os.path.join(os.path.dirname(sys.executable), 'Library', 'bin', 'ffmpeg.exe'),
+        ]
+        for fp in candidates:
+            if fp and os.path.isfile(fp):
+                return fp
+        return None
+
+    def _annotate_frame_with_cn_labels(self, frame_bgr, result_obj):
+        """在检测框上方补绘中文类别+置信度，保证视频/摄像头标签可见。"""
+        if Image is None or ImageDraw is None or ImageFont is None:
+            return frame_bgr
+        if result_obj is None or getattr(result_obj, 'boxes', None) is None:
+            return frame_bgr
+
+        boxes = result_obj.boxes
+        if boxes is None or len(boxes) == 0:
+            return frame_bgr
+
+        try:
+            frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(frame_rgb)
+            draw = ImageDraw.Draw(pil_img)
+
+            font_path = self._detect_chinese_font_path()
+            if font_path:
+                font = ImageFont.truetype(font_path, 18)
+            else:
+                font = ImageFont.load_default()
+
+            occupied = []
+            for box in boxes:
+                x1, y1, x2, y2 = box.xyxy[0].tolist()
+                cls = int(box.cls[0].item())
+                conf = float(box.conf[0].item())
+                label_cn = self.weed_classes[cls] if cls < len(self.weed_classes) else f"杂草{cls}"
+                text = f"{label_cn} {conf:.2f}"
+
+                try:
+                    l, t, r, b = draw.textbbox((0, 0), text, font=font)
+                    tw, th = r - l, b - t
+                except Exception:
+                    tw, th = (len(text) * 10), 20
+
+                tx = max(0, int(x1))
+                ty = max(0, int(y1) - th - 6)
+
+                # 标签避让：同帧内若重叠则向下顺延，提升可读性
+                for _ in range(10):
+                    rect = [tx, ty, tx + tw + 8, ty + th + 6]
+                    overlap = False
+                    for ox1, oy1, ox2, oy2 in occupied:
+                        if not (rect[2] < ox1 or rect[0] > ox2 or rect[3] < oy1 or rect[1] > oy2):
+                            overlap = True
+                            break
+                    if not overlap:
+                        occupied.append((rect[0], rect[1], rect[2], rect[3]))
+                        break
+                    ty = min(frame_bgr.shape[0] - th - 8, ty + th + 8)
+
+                draw.rectangle([tx, ty, tx + tw + 8, ty + th + 6], fill=(34, 139, 34))
+                draw.text((tx + 4, ty + 2), text, fill=(255, 255, 255), font=font)
+
+            return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        except Exception:
+            return frame_bgr
+
+    def _switch_weed_model(self, model_name):
+        """切换检测模型，最小化变更：沿用原 load_weed_model 流程。"""
+        target_name = os.path.basename(str(model_name or '')).strip()
+        if not target_name.lower().endswith('.pt'):
+            raise ValueError("模型文件必须是 .pt")
+
+        target_path = os.path.join(self.weights_root, target_name)
+        if not os.path.isfile(target_path):
+            raise FileNotFoundError(f"模型文件不存在: {target_path}")
+
+        if target_name == self.weed_model_name and hasattr(self, 'weed_model'):
+            return
+
+        self.weed_model_name = target_name
+        self.weed_model_path = target_path
+        self.load_weed_model()
+
+    def _box_iou(self, a, b):
+        ax1, ay1, ax2, ay2 = a
+        bx1, by1, bx2, by2 = b
+        inter_x1 = max(ax1, bx1)
+        inter_y1 = max(ay1, by1)
+        inter_x2 = min(ax2, bx2)
+        inter_y2 = min(ay2, by2)
+        iw = max(0.0, inter_x2 - inter_x1)
+        ih = max(0.0, inter_y2 - inter_y1)
+        inter = iw * ih
+        area_a = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1)
+        area_b = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
+        union = area_a + area_b - inter
+        return inter / union if union > 0 else 0.0
+
+    def _smooth_video_detections(self, prev_dets, curr_dets, iou_thr=0.35, alpha=0.68):
+        """对相邻帧同类目标做 EMA 平滑，减少检测框跳动。"""
+        if not curr_dets:
+            return []
+        if not prev_dets:
+            return curr_dets
+
+        smoothed = []
+        used_prev = set()
+        for cur in curr_dets:
+            cbox = cur.get('bbox_xyxy')
+            ccls = cur.get('cls')
+            best_idx = -1
+            best_iou = 0.0
+            for i, prv in enumerate(prev_dets):
+                if i in used_prev:
+                    continue
+                if prv.get('cls') != ccls:
+                    continue
+                iou = self._box_iou(cbox, prv.get('bbox_xyxy'))
+                if iou > best_iou:
+                    best_iou = iou
+                    best_idx = i
+
+            if best_idx >= 0 and best_iou >= iou_thr:
+                used_prev.add(best_idx)
+                pbox = prev_dets[best_idx].get('bbox_xyxy')
+                sbox = [
+                    alpha * pbox[0] + (1 - alpha) * cbox[0],
+                    alpha * pbox[1] + (1 - alpha) * cbox[1],
+                    alpha * pbox[2] + (1 - alpha) * cbox[2],
+                    alpha * pbox[3] + (1 - alpha) * cbox[3],
+                ]
+                c = dict(cur)
+                c['bbox_xyxy'] = sbox
+                smoothed.append(c)
+            else:
+                smoothed.append(cur)
+        return smoothed
+
+    def _draw_video_detections(self, frame_bgr, dets):
+        """在视频帧上绘制平滑后的检测框与中文标签。"""
+        if frame_bgr is None:
+            return frame_bgr
+        out = frame_bgr.copy()
+        for d in dets:
+            x1, y1, x2, y2 = [int(v) for v in d.get('bbox_xyxy', [0, 0, 0, 0])]
+            cv2.rectangle(out, (x1, y1), (x2, y2), (36, 180, 12), 2)
+
+        if Image is None or ImageDraw is None or ImageFont is None:
+            return out
+
+        try:
+            rgb = cv2.cvtColor(out, cv2.COLOR_BGR2RGB)
+            pil_img = Image.fromarray(rgb)
+            draw = ImageDraw.Draw(pil_img)
+            font_path = self._detect_chinese_font_path()
+            font = ImageFont.truetype(font_path, 18) if font_path else ImageFont.load_default()
+            occupied = []
+
+            for d in dets:
+                x1, y1, _, _ = [int(v) for v in d.get('bbox_xyxy', [0, 0, 0, 0])]
+                label_cn = d.get('weed_name', '杂草')
+                conf = float(d.get('confidence', 0.0))
+                text = f"{label_cn} {conf:.2f}"
+                try:
+                    l, t, r, b = draw.textbbox((0, 0), text, font=font)
+                    tw, th = r - l, b - t
+                except Exception:
+                    tw, th = (len(text) * 10), 20
+
+                tx = max(0, x1)
+                ty = max(0, y1 - th - 6)
+                for _ in range(10):
+                    rect = [tx, ty, tx + tw + 8, ty + th + 6]
+                    overlap = False
+                    for ox1, oy1, ox2, oy2 in occupied:
+                        if not (rect[2] < ox1 or rect[0] > ox2 or rect[3] < oy1 or rect[1] > oy2):
+                            overlap = True
+                            break
+                    if not overlap:
+                        occupied.append((rect[0], rect[1], rect[2], rect[3]))
+                        break
+                    ty = min(out.shape[0] - th - 8, ty + th + 8)
+
+                draw.rectangle([tx, ty, tx + tw + 8, ty + th + 6], fill=(34, 139, 34))
+                draw.text((tx + 4, ty + 2), text, fill=(255, 255, 255), font=font)
+
+            return cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        except Exception:
+            return out
+
     def load_weed_model(self):
         """预加载杂草检测模型（强制加载本地模型，不存在直接抛出错误）"""
         try:
-            # 核心修改：移除官方模型兜底，只加载指定的weed_best.pt
+            # 核心修改：移除官方模型兜底，只加载指定本地模型
             if not os.path.exists(self.weed_model_path):
                 raise FileNotFoundError(f"指定的模型文件不存在，请检查路径！\n模型路径：{self.weed_model_path}")
             
@@ -632,10 +906,21 @@ class VideoProcessingApp:
             
             # 获取模型的实际类别
             if hasattr(self.weed_model, 'names') and self.weed_model.names:
-                self.weed_classes = list(self.weed_model.names.values())
+                raw_names = self._extract_raw_model_names(self.weed_model.names)
+                localized_names = self._build_localized_model_names(raw_names)
+                self.weed_classes_raw = raw_names
+
+                if isinstance(localized_names, dict):
+                    self.weed_classes = list(localized_names.values())
+                elif isinstance(localized_names, list):
+                    self.weed_classes = localized_names
+                else:
+                    self.weed_classes = ["杂草"]
+
                 print(f"✅  杂草检测模型加载成功，类别数: {len(self.weed_classes)}")
                 print(f"✅  类别列表: {self.weed_classes}")
             else:
+                self.weed_classes = ["杂草"]
                 print("⚠️  无法获取模型类别，使用默认类别: [杂草]")
                 
         except Exception as e:
@@ -659,6 +944,9 @@ class VideoProcessingApp:
         
         # 模型列表接口
         self.app.add_url_rule('/file_names', 'file_names', self.file_names, methods=['GET'])
+        self.app.add_url_rule('/flask/file_names', 'file_names_flask', self.file_names, methods=['GET'])
+        self.app.add_url_rule('/set_model', 'set_model', self.set_model, methods=['POST'])
+        self.app.add_url_rule('/flask/set_model', 'set_model_flask', self.set_model, methods=['POST'])
         
         # 视频检测相关
         self.app.add_url_rule('/predictVideo', 'predictVideo', self.predictVideo)
@@ -701,8 +989,12 @@ class VideoProcessingApp:
         
         # 静态文件访问（关键：解决前端获取上传/结果文件404）
         self.app.add_url_rule('/uploads/<path:filename>', 'serve_upload', self.serve_upload)
+        self.app.add_url_rule('/flask/uploads/<path:filename>', 'serve_upload_flask', self.serve_upload)
         self.app.add_url_rule('/results/<path:filename>', 'serve_result', self.serve_result)
+        self.app.add_url_rule('/flask/results/<path:filename>', 'serve_result_flask', self.serve_result)
         self.app.add_url_rule('/runs/<path:filename>', 'serve_runs', self.serve_runs)
+        self.app.add_url_rule('/flask/runs/<path:filename>', 'serve_runs_flask', self.serve_runs)
+        self.app.add_url_rule('/flask/video_preview', 'video_preview', self.video_preview, methods=['GET'])
 
         # WebSocket事件
         @self.socketio.on('connect')
@@ -727,7 +1019,16 @@ class VideoProcessingApp:
                 username = data.get('username', 'default_user')
                 input_video = data.get('inputVideo', '')
                 conf = float(data.get('conf', 0.5))
+                model_name = data.get('model_name', '')
                 start_time = get_now_iso_z()
+
+                if model_name:
+                    try:
+                        self._switch_weed_model(model_name)
+                    except Exception as model_err:
+                        emit('message', {'data': f'模型切换失败: {str(model_err)}'})
+                        emit('progress', 100)
+                        return
                 
                 # 验证参数
                 if not input_video:
@@ -774,17 +1075,16 @@ class VideoProcessingApp:
     def serve_upload(self, filename):
         """提供上传文件访问"""
         try:
-            # 构建完整的上传文件路径
-            uploads_dir = self.paths['uploads']
-            file_path = os.path.join(uploads_dir, filename)
-            
-            # 检查文件是否存在
-            if not os.path.exists(file_path):
-                return f"文件不存在: {filename}", 404
-            
-            response = send_from_directory(uploads_dir, filename, as_attachment=False, max_age=3600)
-            response.headers['Cache-Control'] = 'public, max-age=3600'
-            return response
+            # 优先Flask目录，兼容回退到仓库根目录uploads（历史记录路径）
+            candidate_dirs = [self.paths['uploads'], os.path.join(self.repo_root, 'uploads')]
+            for uploads_dir in candidate_dirs:
+                file_path = os.path.join(uploads_dir, filename)
+                if os.path.exists(file_path):
+                    response = send_from_directory(uploads_dir, filename, as_attachment=False, max_age=3600)
+                    response.headers['Cache-Control'] = 'public, max-age=3600'
+                    return response
+
+            return f"文件不存在: {filename}", 404
         except Exception as e:
             print(f"提供上传文件访问失败: {str(e)}")
             return f"服务错误: {str(e)}", 500
@@ -824,6 +1124,70 @@ class VideoProcessingApp:
         except Exception as e:
             print(f"提供运行文件访问失败: {str(e)}")
             return f"服务错误: {str(e)}", 500
+
+    def _resolve_media_path(self, media_path):
+        """将前端传入路径解析为项目内绝对路径，仅允许 uploads/results/runs。"""
+        if not media_path:
+            return None
+        raw = str(media_path).strip().replace('\\', '/')
+        if '://' in raw:
+            return None
+        if raw.startswith('/uploads/'):
+            rel = raw[len('/uploads/'):]
+            return os.path.join(self.paths['uploads'], rel)
+        if raw.startswith('/results/'):
+            rel = raw[len('/results/'):]
+            return os.path.join(self.paths['results'], rel)
+        if raw.startswith('/runs/'):
+            rel = raw[len('/runs/'):]
+            return os.path.join(self.BASE_DIR, 'runs', rel)
+        return None
+
+    def video_preview(self):
+        """原视频预览代理：转为浏览器友好编码后返回，失败时回退原文件。"""
+        try:
+            media_path = request.args.get('path', '')
+            source_file = self._resolve_media_path(media_path)
+            if not source_file or not os.path.isfile(source_file):
+                return jsonify({'code': 404, 'message': '视频文件不存在'}), 404
+
+            preview_dir = os.path.join(self.paths['uploads'], 'preview_cache')
+            os.makedirs(preview_dir, exist_ok=True)
+
+            source_stat = os.stat(source_file)
+            source_key = f"{source_file}|{int(source_stat.st_mtime)}|{source_stat.st_size}"
+            source_hash = hashlib.md5(source_key.encode('utf-8')).hexdigest()
+            preview_name = f"{source_hash}.mp4"
+            preview_file = os.path.join(preview_dir, preview_name)
+
+            if not os.path.isfile(preview_file):
+                ffmpeg_bin = self._get_ffmpeg_executable()
+                if not ffmpeg_bin:
+                    raise RuntimeError('ffmpeg 不存在，无法生成预览视频')
+                ffmpeg_cmd = [
+                    ffmpeg_bin, '-i', source_file,
+                    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
+                    '-c:a', 'aac', '-b:a', '128k',
+                    '-y', preview_file
+                ]
+                try:
+                    proc = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=120)
+                    if proc.returncode != 0 or not os.path.isfile(preview_file):
+                        raise RuntimeError(proc.stderr or 'ffmpeg transcode failed')
+                except Exception as transcode_err:
+                    print(f"⚠️  预览转码失败，回退原视频: {transcode_err}")
+                    base_dir = os.path.dirname(source_file)
+                    filename = os.path.basename(source_file)
+                    resp = send_from_directory(base_dir, filename, as_attachment=False, max_age=3600)
+                    resp.headers['Cache-Control'] = 'public, max-age=3600'
+                    return resp
+
+            resp = send_from_directory(preview_dir, preview_name, as_attachment=False, max_age=3600)
+            resp.headers['Cache-Control'] = 'public, max-age=3600'
+            return resp
+        except Exception as e:
+            print(f"video_preview error: {e}")
+            return jsonify({'code': 500, 'message': f'视频预览失败: {str(e)}'}), 500
 
     # 新增：带进度反馈的视频处理函数
     def process_video_with_progress(self, video_path, username, conf, start_time):
@@ -898,8 +1262,11 @@ class VideoProcessingApp:
             # 转换为MP4格式
             final_output = os.path.join(output_dir, f"final_{int(datetime.now().timestamp())}.mp4")
             try:
+                ffmpeg_bin = self._get_ffmpeg_executable()
+                if not ffmpeg_bin:
+                    raise RuntimeError('ffmpeg 不存在，无法转码')
                 subprocess.run([
-                    'ffmpeg', '-i', output_path, 
+                    ffmpeg_bin, '-i', output_path,
                     '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
                     '-c:a', 'aac', '-b:a', '128k',
                     '-y', final_output
@@ -1009,8 +1376,8 @@ class VideoProcessingApp:
             file_ext = os.path.splitext(file.filename)[1]
             unique_filename = f"{uuid.uuid4()}{file_ext}"
             file_path = os.path.join(save_dir, unique_filename)
-            
-            # 保存文件
+
+            # 直接保存上传文件，保持链路稳定可靠
             file.save(file_path)
             
             # 构建前端可访问的相对路径（关键：统一斜杠，避免路径错误）
@@ -1062,10 +1429,40 @@ class VideoProcessingApp:
     def file_names(self):
         """模型列表接口"""
         try:
-            return jsonify({'weight_items': [{'name': '杂草检测模型', 'path': self.weed_model_path}]})
+            items = []
+            if os.path.isdir(self.weights_root):
+                for fn in sorted(os.listdir(self.weights_root)):
+                    if not fn.lower().endswith('.pt'):
+                        continue
+                    fp = os.path.join(self.weights_root, fn)
+                    items.append({
+                        'name': fn,
+                        'path': fp,
+                        'selected': fn == self.weed_model_name,
+                    })
+            return jsonify({'weight_items': items, 'current_model': self.weed_model_name})
         except Exception as e:
             print(f"获取模型列表失败: {e}")
             return jsonify({'weight_items': []})
+
+    def set_model(self):
+        """切换当前检测模型。"""
+        try:
+            data = request.get_json(silent=True) or request.form.to_dict() or {}
+            model_name = data.get('model_name') or data.get('modelName') or ''
+            if not model_name:
+                return jsonify({'status': 400, 'message': '缺少模型名 model_name'}), 400
+
+            self._switch_weed_model(model_name)
+            return jsonify({
+                'status': 200,
+                'message': f'模型已切换为 {self.weed_model_name}',
+                'current_model': self.weed_model_name,
+                'classes': self.weed_classes,
+            })
+        except Exception as e:
+            print(f"切换模型失败: {e}")
+            return jsonify({'status': 500, 'message': f'切换模型失败: {str(e)}'}), 500
 
     def test_detection(self):
         """测试接口：直接返回检测框数据"""
@@ -1163,8 +1560,24 @@ class VideoProcessingApp:
             self.data.update({
                 "username": data.get('username', ''),
                 "conf": float(data.get('conf', 0.5)),
-                "inputImg": data['inputImg']
+                "inputImg": data['inputImg'],
+                "model_name": data.get('model_name', '')
             })
+
+            if self.data.get("model_name"):
+                try:
+                    self._switch_weed_model(self.data.get("model_name"))
+                except Exception as model_err:
+                    return jsonify({
+                        "status": 400,
+                        "message": f"模型切换失败: {str(model_err)}",
+                        "label": "",
+                        "confidence": 0.0,
+                        "allTime": 0.0,
+                        "outImg": "",
+                        "detections": [],
+                        "detection_count": 0
+                    })
         
             print(f"🔍 执行杂草检测，置信度: {self.data['conf']}, 原始图片路径: {self.data['inputImg']}")
         
@@ -1333,7 +1746,7 @@ class VideoProcessingApp:
         detections = []
         try:
             print(f"📌 直接使用模型检测图片: {img_path}")
-            # 使用指定的weed_best.pt模型检测
+            # 使用当前部署模型进行检测
             detection_results = self.weed_model(img_path, conf=self.data.get("conf", 0.5), device='cpu')
             
             for r in detection_results:
@@ -1366,6 +1779,7 @@ class VideoProcessingApp:
             # 核心修改2：保存检测结果图片到Flask项目内的runs目录（临时文件）
             if detections:
                 result_img = detection_results[0].plot()
+                result_img = self._annotate_frame_with_cn_labels(result_img, detection_results[0])
                 cv2.imwrite(self.paths['temp_result'], result_img)
             else:
                 # 未检测到目标，复制原图作为结果到项目内临时路径
@@ -1386,8 +1800,14 @@ class VideoProcessingApp:
             "username": request.args.get('username', ''),
             "conf": float(request.args.get('conf', 0.5)),
             "startTime": get_now_iso_z(),
-            "inputVideo": request.args.get('inputVideo', '')
+            "inputVideo": request.args.get('inputVideo', ''),
+            "model_name": request.args.get('model_name', '')
         })
+        if self.data.get("model_name"):
+            try:
+                self._switch_weed_model(self.data.get("model_name"))
+            except Exception as model_err:
+                return Response(f"模型切换失败: {str(model_err)}", status=400)
         # 重置进度（关键）
         self.video_process_progress = 0
         
@@ -1426,6 +1846,7 @@ class VideoProcessingApp:
 
         def generate():
             nonlocal current_frame
+            prev_detections = []
             try:
                 while cap.isOpened():
                     ret, frame = cap.read()
@@ -1447,8 +1868,25 @@ class VideoProcessingApp:
                        
                     )
                     
-                    # 绘制检测框和标签
-                    processed_frame = results[0].plot()
+                    # 解析检测并做帧间平滑，降低检测框闪烁
+                    curr_detections = []
+                    boxes = results[0].boxes
+                    if boxes is not None:
+                        for box in boxes:
+                            x1, y1, x2, y2 = box.xyxy[0].tolist()
+                            cls = int(box.cls[0].item())
+                            conf = float(box.conf[0].item())
+                            curr_detections.append({
+                                'bbox_xyxy': [x1, y1, x2, y2],
+                                'cls': cls,
+                                'confidence': conf,
+                                'weed_name': self.weed_classes[cls] if cls < len(self.weed_classes) else f'杂草{cls}',
+                            })
+
+                    smoothed = self._smooth_video_detections(prev_detections, curr_detections)
+                    prev_detections = smoothed
+
+                    processed_frame = self._draw_video_detections(frame, smoothed)
                     video_writer.write(processed_frame)
                     
                     # 编码为jpg，生成视频流返回前端
@@ -1502,8 +1940,16 @@ class VideoProcessingApp:
             self.camera_data = {
                 "username": request.args.get('username', 'unknown'),
                 "conf": float(request.args.get('conf', 0.5)),
-                "startTime": get_now_iso_z()
+                "startTime": get_now_iso_z(),
+                "model_name": request.args.get('model_name', '')
             }
+
+            if self.camera_data.get('model_name'):
+                try:
+                    self._switch_weed_model(self.camera_data.get('model_name'))
+                except Exception as model_err:
+                    self.camera_lock = False
+                    return Response(f"模型切换失败: {str(model_err)}", status=400)
             
             # 生成唯一的视频文件名，避免冲突
             video_timestamp = int(datetime.now().timestamp())
@@ -1566,6 +2012,7 @@ class VideoProcessingApp:
                         
                         # 绘制检测框和标签
                         processed_frame = results[0].plot()
+                        processed_frame = self._annotate_frame_with_cn_labels(processed_frame, results[0])
                         if self.recording:
                             self.camera_writer.write(processed_frame)
                         
@@ -1620,8 +2067,11 @@ class VideoProcessingApp:
             # 转换视频格式为MP4
             try:
                 print(f"🔄 转换视频格式: {video_path} -> {result_video_path}")
+                ffmpeg_bin = self._get_ffmpeg_executable()
+                if not ffmpeg_bin:
+                    raise RuntimeError('ffmpeg 不存在，无法转换摄像头视频')
                 subprocess.run([
-                    'ffmpeg', '-i', video_path,
+                    ffmpeg_bin, '-i', video_path,
                     '-c:v', 'libx264', '-preset', 'fast', '-crf', '23',
                     '-c:a', 'aac', '-b:a', '128k',
                     '-y', result_video_path
@@ -2099,47 +2549,216 @@ class VideoProcessingApp:
 
         return None
 
-    def _build_placeholder_train_tasks(self):
-        """构造训练任务列表（占位 + 本地 runs 扫描）"""
-        tasks = []
+    def _load_train_runtime_tasks(self):
+        """从本地JSON加载运行态训练任务。"""
+        self.train_placeholder_tasks = []
+        if not os.path.isfile(self.train_runtime_state_file):
+            return
+        try:
+            with open(self.train_runtime_state_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                self.train_placeholder_tasks = data
+        except Exception as e:
+            print(f"⚠️ 加载训练运行态任务失败: {e}")
 
-        for task in self.train_placeholder_tasks:
-            tasks.append(task)
+    def _save_train_runtime_tasks(self):
+        """将运行态任务持久化到本地JSON。"""
+        try:
+            os.makedirs(os.path.dirname(self.train_runtime_state_file), exist_ok=True)
+            with open(self.train_runtime_state_file, 'w', encoding='utf-8') as f:
+                json.dump(self.train_placeholder_tasks, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"⚠️ 保存训练运行态任务失败: {e}")
 
-        runs_dir = os.path.join(self.BASE_DIR, 'runs')
-        if os.path.isdir(runs_dir):
-            for project_name in sorted(os.listdir(runs_dir)):
-                project_path = os.path.join(runs_dir, project_name)
-                if not os.path.isdir(project_path):
+    def _task_status_from_exit_code(self, code):
+        if code is None:
+            return 'running'
+        return 'completed' if int(code) == 0 else 'failed'
+
+    def _find_results_csv(self, run_dir):
+        csv_path = os.path.join(run_dir, 'results.csv')
+        return csv_path if os.path.isfile(csv_path) else None
+
+    def _guess_latest_run_dir(self, project_dir, since_ts=0):
+        if not os.path.isdir(project_dir):
+            return None
+        best = None
+        best_mtime = 0
+        for name in os.listdir(project_dir):
+            run_dir = os.path.join(project_dir, name)
+            if not os.path.isdir(run_dir):
+                continue
+            csv_path = self._find_results_csv(run_dir)
+            if not csv_path:
+                continue
+            mtime = os.path.getmtime(csv_path)
+            if mtime >= since_ts and mtime > best_mtime:
+                best = run_dir
+                best_mtime = mtime
+        return best
+
+    def _refresh_runtime_task(self, task):
+        """刷新运行态任务状态，并尝试自动关联 runPath。"""
+        task_id = task.get('taskId')
+        proc = self.train_processes.get(task_id)
+        if proc is not None:
+            exit_code = proc.poll()
+            task['status'] = self._task_status_from_exit_code(exit_code)
+            task['exitCode'] = exit_code
+            task['updatedAt'] = get_now_str()
+
+        if not task.get('runPath'):
+            project_dir = task.get('projectDir', '')
+            since_ts = float(task.get('createdTs', 0))
+            guessed = self._guess_latest_run_dir(project_dir, since_ts=max(0.0, since_ts - 60))
+            if guessed:
+                task['runPath'] = guessed
+                task['runName'] = os.path.basename(guessed)
+
+    def _scan_history_tasks(self):
+        """扫描 experiments 目录生成历史训练任务。"""
+        experiments_dir = os.path.join(self.repo_root, 'experiments')
+        if not os.path.isdir(experiments_dir):
+            return []
+
+        results = []
+        for project_name in sorted(os.listdir(experiments_dir)):
+            if not project_name.startswith('YOLO'):
+                continue
+            project_dir = os.path.join(experiments_dir, project_name)
+            if not os.path.isdir(project_dir):
+                continue
+
+            for run_name in sorted(os.listdir(project_dir)):
+                run_dir = os.path.join(project_dir, run_name)
+                if not os.path.isdir(run_dir):
                     continue
-                for run_name in sorted(os.listdir(project_path)):
-                    run_path = os.path.join(project_path, run_name)
-                    if not os.path.isdir(run_path):
-                        continue
-                    task_id = f"scan-{project_name}-{run_name}"
-                    created_at = datetime.fromtimestamp(os.path.getmtime(run_path)).strftime('%Y-%m-%d %H:%M:%S')
-                    tasks.append({
-                        'taskId': task_id,
-                        'taskName': f"{project_name}/{run_name}",
-                        'modelType': 'unknown',
-                        'datasetName': 'unknown',
-                        'status': 'history',
-                        'createdAt': created_at,
-                        'source': 'runs-scan',
-                    })
+                csv_path = self._find_results_csv(run_dir)
+                if not csv_path:
+                    continue
+                created_at = datetime.fromtimestamp(os.path.getmtime(csv_path)).strftime('%Y-%m-%d %H:%M:%S')
+                task_id = f"scan-{project_name}-{run_name}"
+                results.append({
+                    'taskId': task_id,
+                    'taskName': f"{project_name}/{run_name}",
+                    'modelType': 'history',
+                    'datasetName': 'unknown',
+                    'status': 'history',
+                    'createdAt': created_at,
+                    'source': 'experiments-scan',
+                    'runPath': run_dir,
+                    'runName': run_name,
+                    'projectDir': project_dir,
+                })
+        return results
 
-        if not tasks:
-            tasks.append({
-                'taskId': 'placeholder-001',
-                'taskName': 'weed-train-demo',
-                'modelType': 'yolo11n',
-                'datasetName': 'weed_dataset_v1',
-                'status': 'placeholder',
-                'createdAt': get_now_str(),
-                'source': 'placeholder',
-            })
+    def _build_placeholder_train_tasks(self):
+        """构造训练任务列表（运行态任务 + 历史扫描）。"""
+        for task in self.train_placeholder_tasks:
+            self._refresh_runtime_task(task)
 
-        return tasks
+        known_run_paths = {str(t.get('runPath', '')) for t in self.train_placeholder_tasks if t.get('runPath')}
+        history_tasks = [h for h in self._scan_history_tasks() if str(h.get('runPath', '')) not in known_run_paths]
+
+        all_tasks = list(self.train_placeholder_tasks) + history_tasks
+        all_tasks.sort(key=lambda x: str(x.get('createdAt', '')), reverse=True)
+        return all_tasks
+
+    def _resolve_dataset_yaml(self, dataset_name):
+        """将数据集名称解析为可用 data.yaml 路径。"""
+        if not dataset_name:
+            return os.path.join(self.repo_root, 'training', 'configs', 'data_3seasonweeddet10.yaml')
+
+        if os.path.isabs(dataset_name) and os.path.isfile(dataset_name):
+            return dataset_name
+
+        candidates = [
+            os.path.join(self.repo_root, 'training', 'configs', dataset_name),
+            os.path.join(self.repo_root, 'training', 'configs', f"{dataset_name}.yaml"),
+            os.path.join(self.repo_root, 'datasets', dataset_name, 'data.yaml'),
+            os.path.join(self.repo_root, 'data', dataset_name, 'data.yaml'),
+        ]
+        for path in candidates:
+            if os.path.isfile(path):
+                return path
+
+        return os.path.join(self.repo_root, 'training', 'configs', 'data_3seasonweeddet10.yaml')
+
+    def _build_train_launch_plan(self, model_type, task_name, payload):
+        """根据模型类型构造训练脚本与参数。"""
+        scripts_dir = os.path.join(self.repo_root, 'training', 'scripts')
+        model_type_norm = (model_type or 'yolo11s').strip().lower()
+
+        if model_type_norm in ('custom', 'mbv3', 'yolo11s-mbv3'):
+            script = os.path.join(scripts_dir, 'phase3_train_yolo11s_mbv3.py')
+            project_dir = os.path.join(self.repo_root, 'experiments', 'YOLOv11-S-MBV3')
+            run_prefix = 'api_mbv3'
+            extra = []
+        elif model_type_norm in ('eca', 'mbv3_eca', 'yolo11s-mbv3-eca'):
+            script = os.path.join(scripts_dir, 'phase4_train_yolo11s_mbv3_eca.py')
+            project_dir = os.path.join(self.repo_root, 'experiments', 'YOLOv11-S-MBV3-ECA')
+            run_prefix = 'api_eca'
+            extra = ['--ultralytics-root', os.path.join(self.repo_root, 'training', 'ultralytics_custom')]
+        else:
+            script = os.path.join(scripts_dir, 'phase2_train_yolo11s.py')
+            project_dir = os.path.join(self.repo_root, 'experiments', 'YOLOv11-S')
+            run_prefix = 'api_baseline'
+            weights = 'yolo11n.pt' if model_type_norm == 'yolo11n' else 'yolo11s.pt'
+            extra = ['--weights', weights]
+
+        data_yaml = self._resolve_dataset_yaml(payload.get('datasetName'))
+        return {
+            'script': script,
+            'projectDir': project_dir,
+            'runPrefix': run_prefix,
+            'dataYaml': data_yaml,
+            'extraArgs': extra,
+            'taskName': task_name,
+        }
+
+    def _start_train_task(self, task):
+        """启动训练子进程（非阻塞）。"""
+        plan = task.get('launchPlan') or {}
+        script = plan.get('script', '')
+        if not os.path.isfile(script):
+            raise FileNotFoundError(f"训练脚本不存在: {script}")
+
+        python_exec = sys.executable
+        task_log_dir = os.path.join(self.train_runtime_dir, 'train_tasks')
+        os.makedirs(task_log_dir, exist_ok=True)
+        task_log_path = os.path.join(task_log_dir, f"{task['taskId']}.log")
+
+        cmd = [
+            python_exec,
+            script,
+            '--data', plan.get('dataYaml', ''),
+            '--epochs', str(task.get('epochs', 100)),
+            '--batch', str(task.get('batchSize', 6)),
+            '--imgsz', str(task.get('imageSize', 640)),
+            '--workers', '0',
+            '--cache', 'disk',
+            '--run-prefix', plan.get('runPrefix', 'api_run'),
+            '--project', plan.get('projectDir', ''),
+            '--device', str(task.get('device', '0')),
+        ] + list(plan.get('extraArgs', []))
+
+        with open(task_log_path, 'a', encoding='utf-8') as log_fp:
+            log_fp.write(f"\n[{get_now_str()}] start command: {' '.join(cmd)}\n")
+
+        process = subprocess.Popen(
+            cmd,
+            cwd=self.repo_root,
+            stdout=open(task_log_path, 'a', encoding='utf-8'),
+            stderr=subprocess.STDOUT,
+        )
+
+        self.train_processes[task['taskId']] = process
+        task['status'] = 'running'
+        task['pid'] = process.pid
+        task['taskLog'] = task_log_path
+        task['projectDir'] = plan.get('projectDir', '')
+        task['updatedAt'] = get_now_str()
 
     def _safe_float(self, value, default=0.0):
         try:
@@ -2151,6 +2770,15 @@ class VideoProcessingApp:
 
     def _find_run_path_by_task_id(self, task_id):
         """根据 scan-任务ID 解析 runs 路径"""
+        # 1) 先查运行态任务
+        for t in self.train_placeholder_tasks:
+            if t.get('taskId') == task_id:
+                self._refresh_runtime_task(t)
+                run_path = t.get('runPath')
+                if run_path and os.path.isdir(run_path):
+                    return run_path
+
+        # 2) 再按历史扫描ID回溯
         if not task_id or not str(task_id).startswith('scan-'):
             return None
         parts = str(task_id).split('-', 2)
@@ -2158,7 +2786,7 @@ class VideoProcessingApp:
             return None
         project_name = parts[1]
         run_name = parts[2]
-        run_path = os.path.join(self.BASE_DIR, 'runs', project_name, run_name)
+        run_path = os.path.join(self.repo_root, 'experiments', project_name, run_name)
         return run_path if os.path.isdir(run_path) else None
 
     def _load_run_epochs_from_csv(self, run_path):
@@ -2220,19 +2848,19 @@ class VideoProcessingApp:
         ]
 
     def get_train_tasks(self):
-        """获取训练任务列表（占位接口）"""
+        """获取训练任务列表（运行态 + 历史扫描）"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
                 return auth_error
 
             tasks = self._build_placeholder_train_tasks()
+            self._save_train_runtime_tasks()
             return jsonify({
                 'code': 0,
-                'msg': '获取训练任务成功（占位数据）',
+                'msg': '获取训练任务成功',
                 'data': {
-                    'status': 'placeholder',
-                    'todo': '后续接入真实训练任务调度与数据库持久化',
+                    'status': 'ready',
                     'tasks': tasks,
                 },
             })
@@ -2241,7 +2869,7 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'获取训练任务失败: {str(e)}', 'data': {'tasks': []}})
 
     def create_train_task(self):
-        """创建训练任务（占位接口，不执行训练）"""
+        """创建训练任务并启动真实训练子进程。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
@@ -2259,20 +2887,25 @@ class VideoProcessingApp:
                 'datasetName': data.get('datasetName', 'weed_dataset_v1'),
                 'status': 'queued',
                 'createdAt': get_now_str(),
+                'createdTs': time.time(),
                 'epochs': int(data.get('epochs', 100)),
                 'batchSize': int(data.get('batchSize', 16)),
                 'imageSize': int(data.get('imageSize', 640)),
                 'remark': data.get('remark', ''),
-                'source': 'manual-placeholder',
+                'device': str(data.get('device', '0')),
+                'source': 'manual-runtime',
             }
+            task['launchPlan'] = self._build_train_launch_plan(task.get('modelType'), task_name, data)
+
+            self._start_train_task(task)
             self.train_placeholder_tasks.insert(0, task)
+            self._save_train_runtime_tasks()
 
             return jsonify({
                 'code': 0,
-                'msg': '训练任务创建成功（占位，未执行）',
+                'msg': '训练任务创建成功，已启动',
                 'data': {
-                    'status': 'placeholder',
-                    'todo': '后续接入真实训练执行引擎',
+                    'status': 'running',
                     'task': task,
                 },
             })
@@ -2281,7 +2914,7 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'创建训练任务失败: {str(e)}'})
 
     def get_train_monitor(self):
-        """获取训练监控数据（占位接口）"""
+        """获取训练监控数据（优先真实训练结果）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
@@ -2291,33 +2924,31 @@ class VideoProcessingApp:
             run_path = self._find_run_path_by_task_id(task_id)
             epochs = self._load_run_epochs_from_csv(run_path) if run_path else []
 
-            status = 'placeholder'
-            if not epochs:
-                for idx in range(1, 11):
-                    epochs.append({
-                        'epoch': idx,
-                        'loss': round(max(0.1, 2.2 - idx * 0.18), 4),
-                        'precision': round(min(0.99, 0.52 + idx * 0.035), 4),
-                        'recall': round(min(0.99, 0.48 + idx * 0.034), 4),
-                        'map50': round(min(0.99, 0.45 + idx * 0.04), 4),
-                    })
-            else:
-                status = 'runs-csv'
+            status = 'runs-csv' if epochs else 'running-no-metrics'
+            runtime_task = None
+            for t in self.train_placeholder_tasks:
+                if t.get('taskId') == task_id:
+                    self._refresh_runtime_task(t)
+                    runtime_task = t
+                    status = t.get('status', status)
+                    break
 
             current_epoch = epochs[-1]['epoch'] if epochs else 0
-            total_epoch = max(current_epoch, 100 if status == 'placeholder' else current_epoch)
+            total_epoch = int(runtime_task.get('epochs', current_epoch or 1)) if runtime_task else max(current_epoch, 1)
             progress = int((current_epoch / total_epoch) * 100) if total_epoch > 0 else 0
             progress = max(0, min(progress, 100))
+            if runtime_task and status == 'completed':
+                progress = 100
 
             overview = {
                 'taskId': task_id or 'placeholder-001',
-                'status': 'running-placeholder' if status == 'placeholder' else 'completed-history',
+                'status': status,
                 'currentEpoch': current_epoch,
                 'totalEpoch': total_epoch,
                 'progress': progress,
-                'map50': epochs[-1]['map50'],
-                'precision': epochs[-1]['precision'],
-                'recall': epochs[-1]['recall'],
+                'map50': epochs[-1]['map50'] if epochs else 0.0,
+                'precision': epochs[-1]['precision'] if epochs else 0.0,
+                'recall': epochs[-1]['recall'] if epochs else 0.0,
                 'updatedAt': get_now_str(),
             }
 
@@ -2326,9 +2957,10 @@ class VideoProcessingApp:
                 'msg': '获取训练监控成功',
                 'data': {
                     'status': status,
-                    'todo': '当前优先读取 runs/results.csv，后续接入实时训练日志流',
                     'overview': overview,
                     'epochs': epochs,
+                    'runPath': run_path,
+                    'taskLog': runtime_task.get('taskLog') if runtime_task else '',
                 },
             })
         except Exception as e:
@@ -2336,33 +2968,38 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'获取训练监控失败: {str(e)}'})
 
     def get_train_datasets(self):
-        """获取训练数据集列表（占位接口）"""
+        """获取训练数据集列表（真实目录扫描）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
                 return auth_error
 
             dataset_candidates = []
-            for folder in ['datasets', 'datesets']:
-                folder_path = os.path.join(self.BASE_DIR, folder)
+            for folder in ['datasets', 'data']:
+                folder_path = os.path.join(self.repo_root, folder)
                 if os.path.isdir(folder_path):
                     for name in sorted(os.listdir(folder_path)):
                         path = os.path.join(folder_path, name)
                         if os.path.isdir(path):
                             dataset_candidates.append({'name': name, 'path': path})
 
-            if not dataset_candidates:
-                dataset_candidates = [
-                    {'name': 'weed_dataset_v1', 'path': 'placeholder://weed_dataset_v1'},
-                    {'name': 'weed_dataset_v2', 'path': 'placeholder://weed_dataset_v2'},
-                ]
+            configs_dir = os.path.join(self.repo_root, 'training', 'configs')
+            if os.path.isdir(configs_dir):
+                for file_name in sorted(os.listdir(configs_dir)):
+                    if file_name.endswith('.yaml') and 'data_' in file_name:
+                        full_path = os.path.join(configs_dir, file_name)
+                        dataset_candidates.append({'name': file_name[:-5], 'path': full_path})
+
+            uniq = {}
+            for item in dataset_candidates:
+                uniq[item['name']] = item
+            dataset_candidates = list(uniq.values())
 
             return jsonify({
                 'code': 0,
-                'msg': '获取数据集列表成功（占位数据）',
+                'msg': '获取数据集列表成功',
                 'data': {
-                    'status': 'placeholder',
-                    'todo': '后续接入真实数据集目录扫描和标签统计',
+                    'status': 'ready',
                     'datasets': dataset_candidates,
                 },
             })
@@ -2371,52 +3008,106 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'获取数据集列表失败: {str(e)}', 'data': {'datasets': []}})
 
     def get_train_dataset_analysis(self, dataset_name):
-        """获取数据集分析结果（占位接口）"""
+        """获取数据集分析结果（真实统计）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
                 return auth_error
 
+            data_yaml_path = self._resolve_dataset_yaml(dataset_name)
+            if not os.path.isfile(data_yaml_path):
+                return jsonify({'code': 404, 'msg': f'数据集配置不存在: {data_yaml_path}'})
+
+            if yaml is None:
+                return jsonify({'code': 500, 'msg': '缺少PyYAML依赖，无法解析数据集配置'})
+
+            with open(data_yaml_path, 'r', encoding='utf-8') as f:
+                ds = yaml.safe_load(f) or {}
+
+            names = ds.get('names') or []
+            if isinstance(names, dict):
+                names = [names[k] for k in sorted(names.keys())]
+
+            train_dir = ds.get('train')
+            val_dir = ds.get('val')
+            if train_dir and not os.path.isabs(train_dir):
+                train_dir = os.path.normpath(os.path.join(os.path.dirname(data_yaml_path), train_dir))
+            if val_dir and not os.path.isabs(val_dir):
+                val_dir = os.path.normpath(os.path.join(os.path.dirname(data_yaml_path), val_dir))
+
+            def count_images(folder):
+                if not folder or not os.path.isdir(folder):
+                    return 0
+                cnt = 0
+                for root, _, files in os.walk(folder):
+                    for fn in files:
+                        if fn.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.webp')):
+                            cnt += 1
+                return cnt
+
+            def collect_label_distribution(folder):
+                dist = {str(name): 0 for name in names}
+                if not folder or not os.path.isdir(folder):
+                    return dist
+                labels_dir = folder.replace(os.sep + 'images', os.sep + 'labels') if 'images' in folder else folder
+                if not os.path.isdir(labels_dir):
+                    return dist
+                for root, _, files in os.walk(labels_dir):
+                    for fn in files:
+                        if not fn.lower().endswith('.txt'):
+                            continue
+                        path = os.path.join(root, fn)
+                        try:
+                            with open(path, 'r', encoding='utf-8') as lf:
+                                for line in lf:
+                                    seg = line.strip().split()
+                                    if not seg:
+                                        continue
+                                    cls_idx = int(float(seg[0]))
+                                    if 0 <= cls_idx < len(names):
+                                        dist[str(names[cls_idx])] = dist.get(str(names[cls_idx]), 0) + 1
+                        except Exception:
+                            continue
+                return dist
+
+            train_images = count_images(train_dir)
+            val_images = count_images(val_dir)
+            class_dist = collect_label_distribution(train_dir)
+            val_dist = collect_label_distribution(val_dir)
+            for k, v in val_dist.items():
+                class_dist[k] = class_dist.get(k, 0) + v
+
             analysis = {
                 'datasetName': dataset_name,
-                'trainImages': 320,
-                'valImages': 80,
-                'classDistribution': {
-                    '杂草': 1280,
-                    '作物': 860,
-                    '土壤背景': 540,
-                },
-                'imageSizes': [
-                    [640, 640],
-                    [1280, 720],
-                    [1920, 1080],
-                    [1024, 768],
-                ],
-                'status': 'placeholder',
-                'todo': '后续接入真实标签文件统计与尺寸分布分析',
+                'dataYaml': data_yaml_path,
+                'trainImages': train_images,
+                'valImages': val_images,
+                'classDistribution': class_dist,
+                'imageSizes': [[640, 640]],
+                'status': 'ready',
             }
-            return jsonify({'code': 0, 'msg': '获取数据集分析成功（占位数据）', 'data': analysis})
+            return jsonify({'code': 0, 'msg': '获取数据集分析成功', 'data': analysis})
         except Exception as e:
             print(f"获取数据集分析失败: {e}")
             return jsonify({'code': 500, 'msg': f'获取数据集分析失败: {str(e)}'})
 
     def get_train_model_compare(self):
-        """获取模型比较结果（占位接口）"""
+        """获取模型比较结果（优先真实 runs 指标）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
                 return auth_error
 
             model_options = [
-                {'modelId': 'weed_best', 'name': 'weed_best.pt (当前部署模型)'},
-                {'modelId': 'yolo11n', 'name': 'YOLO11n (占位对比模型)'},
-                {'modelId': 'yolo11s', 'name': 'YOLO11s (占位对比模型)'},
+                {'modelId': 'weed_best', 'name': 'eca2-1.pt (当前部署模型)'},
+                {'modelId': 'yolo11n', 'name': 'YOLO11n'},
+                {'modelId': 'yolo11s', 'name': 'YOLO11s'},
             ]
             for task in self._build_placeholder_train_tasks():
                 if str(task.get('taskId', '')).startswith('scan-'):
                     model_options.append({
                         'modelId': task['taskId'],
-                        'name': f"{task['taskName']} (runs历史)",
+                        'name': f"{task['taskName']} (runs)",
                     })
 
             model_a = request.args.get('modelA', model_options[0]['modelId'])
@@ -2456,7 +3147,6 @@ class VideoProcessingApp:
                 'msg': '获取模型比较成功',
                 'data': {
                     'status': status,
-                    'todo': '当前优先读取 runs/results.csv，后续接入完整评估报告',
                     'modelA': model_a,
                     'modelB': model_b,
                     'modelOptions': model_options,
