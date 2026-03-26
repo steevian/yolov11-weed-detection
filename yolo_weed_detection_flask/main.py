@@ -994,7 +994,6 @@ class VideoProcessingApp:
         self.app.add_url_rule('/flask/results/<path:filename>', 'serve_result_flask', self.serve_result)
         self.app.add_url_rule('/runs/<path:filename>', 'serve_runs', self.serve_runs)
         self.app.add_url_rule('/flask/runs/<path:filename>', 'serve_runs_flask', self.serve_runs)
-        self.app.add_url_rule('/flask/video_preview', 'video_preview', self.video_preview, methods=['GET'])
 
         # WebSocket事件
         @self.socketio.on('connect')
@@ -1125,69 +1124,79 @@ class VideoProcessingApp:
             print(f"提供运行文件访问失败: {str(e)}")
             return f"服务错误: {str(e)}", 500
 
-    def _resolve_media_path(self, media_path):
-        """将前端传入路径解析为项目内绝对路径，仅允许 uploads/results/runs。"""
-        if not media_path:
-            return None
-        raw = str(media_path).strip().replace('\\', '/')
-        if '://' in raw:
-            return None
-        if raw.startswith('/uploads/'):
-            rel = raw[len('/uploads/'):]
-            return os.path.join(self.paths['uploads'], rel)
-        if raw.startswith('/results/'):
-            rel = raw[len('/results/'):]
-            return os.path.join(self.paths['results'], rel)
-        if raw.startswith('/runs/'):
-            rel = raw[len('/runs/'):]
-            return os.path.join(self.BASE_DIR, 'runs', rel)
-        return None
+    def _transcode_uploaded_video_best_effort(self, source_path, target_path):
+        """上传视频转码为浏览器友好编码，返回 (target_path, error)。"""
+        ffmpeg_bin = self._get_ffmpeg_executable()
+        if not ffmpeg_bin:
+            return target_path, 'ffmpeg-not-found'
 
-    def video_preview(self):
-        """原视频预览代理：转为浏览器友好编码后返回，失败时回退原文件。"""
+        source_abs = os.path.abspath(source_path)
+        target_abs = os.path.abspath(target_path)
+
+        cmd_profiles = [
+            [
+                ffmpeg_bin,
+                '-y',
+                '-i', source_abs,
+                '-map', '0:v:0',
+                '-map', '0:a:0?',
+                '-sn',
+                '-dn',
+                '-c:v', 'libx264',
+                '-pix_fmt', 'yuv420p',
+                '-movflags', '+faststart',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                '-ac', '2',
+                '-ar', '48000',
+                target_abs,
+            ],
+            [
+                ffmpeg_bin,
+                '-y',
+                '-fflags', '+genpts',
+                '-analyzeduration', '200M',
+                '-probesize', '200M',
+                '-i', source_abs,
+                '-map', '0:v:0',
+                '-map', '0:a:0?',
+                '-sn',
+                '-dn',
+                '-vf', 'format=yuv420p',
+                '-r', '30',
+                '-movflags', '+faststart',
+                '-c:v', 'libx264',
+                '-preset', 'veryfast',
+                '-crf', '23',
+                '-c:a', 'aac',
+                '-b:a', '128k',
+                '-ac', '2',
+                '-ar', '48000',
+                target_abs,
+            ],
+        ]
+
+        last_error = 'transcode-failed'
+        for ffmpeg_cmd in cmd_profiles:
+            try:
+                proc = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=300)
+                if proc.returncode == 0 and os.path.isfile(target_abs) and os.path.getsize(target_abs) > 0:
+                    try:
+                        if source_abs != target_abs and os.path.isfile(source_abs):
+                            os.remove(source_abs)
+                    except Exception:
+                        pass
+                    return target_abs, None
+                last_error = (proc.stderr or proc.stdout or 'transcode-failed').strip()[:1200]
+            except Exception as e:
+                last_error = str(e)
+
         try:
-            media_path = request.args.get('path', '')
-            source_file = self._resolve_media_path(media_path)
-            if not source_file or not os.path.isfile(source_file):
-                return jsonify({'code': 404, 'message': '视频文件不存在'}), 404
-
-            preview_dir = os.path.join(self.paths['uploads'], 'preview_cache')
-            os.makedirs(preview_dir, exist_ok=True)
-
-            source_stat = os.stat(source_file)
-            source_key = f"{source_file}|{int(source_stat.st_mtime)}|{source_stat.st_size}"
-            source_hash = hashlib.md5(source_key.encode('utf-8')).hexdigest()
-            preview_name = f"{source_hash}.mp4"
-            preview_file = os.path.join(preview_dir, preview_name)
-
-            if not os.path.isfile(preview_file):
-                ffmpeg_bin = self._get_ffmpeg_executable()
-                if not ffmpeg_bin:
-                    raise RuntimeError('ffmpeg 不存在，无法生成预览视频')
-                ffmpeg_cmd = [
-                    ffmpeg_bin, '-i', source_file,
-                    '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart',
-                    '-c:a', 'aac', '-b:a', '128k',
-                    '-y', preview_file
-                ]
-                try:
-                    proc = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, timeout=120)
-                    if proc.returncode != 0 or not os.path.isfile(preview_file):
-                        raise RuntimeError(proc.stderr or 'ffmpeg transcode failed')
-                except Exception as transcode_err:
-                    print(f"⚠️  预览转码失败，回退原视频: {transcode_err}")
-                    base_dir = os.path.dirname(source_file)
-                    filename = os.path.basename(source_file)
-                    resp = send_from_directory(base_dir, filename, as_attachment=False, max_age=3600)
-                    resp.headers['Cache-Control'] = 'public, max-age=3600'
-                    return resp
-
-            resp = send_from_directory(preview_dir, preview_name, as_attachment=False, max_age=3600)
-            resp.headers['Cache-Control'] = 'public, max-age=3600'
-            return resp
-        except Exception as e:
-            print(f"video_preview error: {e}")
-            return jsonify({'code': 500, 'message': f'视频预览失败: {str(e)}'}), 500
+            if os.path.isfile(target_abs):
+                os.remove(target_abs)
+        except Exception:
+            pass
+        return target_abs, last_error
 
     # 新增：带进度反馈的视频处理函数
     def process_video_with_progress(self, video_path, username, conf, start_time):
@@ -1363,10 +1372,12 @@ class VideoProcessingApp:
                 return jsonify({"status": 400, "message": "没有选择文件"}), 400
             
             # 根据文件类型决定保存目录
+            is_video = False
             if file.filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp')):
                 save_dir = os.path.join(self.paths['uploads'], 'detect', 'images')
             elif file.filename.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
                 save_dir = os.path.join(self.paths['uploads'], 'detect', 'videos')
+                is_video = True
             else:
                 return jsonify({"status": 400, "message": "不支持的文件类型，仅支持图片/视频"}), 400
             
@@ -1374,21 +1385,47 @@ class VideoProcessingApp:
             
             # 生成唯一文件名，避免重复
             file_ext = os.path.splitext(file.filename)[1]
-            unique_filename = f"{uuid.uuid4()}{file_ext}"
-            file_path = os.path.join(save_dir, unique_filename)
+            unique_id = str(uuid.uuid4())
 
-            # 直接保存上传文件，保持链路稳定可靠
-            file.save(file_path)
+            if is_video:
+                src_filename = f"{unique_id}_src{file_ext}"
+                final_filename = f"{unique_id}.mp4"
+                source_path = os.path.join(save_dir, src_filename)
+                file_path = os.path.join(save_dir, final_filename)
+                file.save(source_path)
+            else:
+                unique_filename = f"{unique_id}{file_ext}"
+                file_path = os.path.join(save_dir, unique_filename)
+                file.save(file_path)
+
+            if is_video:
+                new_path, err = self._transcode_uploaded_video_best_effort(source_path, file_path)
+                if err:
+                    # 避免把可能黑屏的不兼容视频继续写入业务链路
+                    try:
+                        if os.path.isfile(source_path):
+                            os.remove(source_path)
+                        if os.path.isfile(file_path):
+                            os.remove(file_path)
+                    except Exception:
+                        pass
+                    return jsonify({
+                        "status": 500,
+                        "message": "视频预处理失败，请重试或更换视频源",
+                        "detail": err
+                    }), 500
+                file_path = new_path
             
             # 构建前端可访问的相对路径（关键：统一斜杠，避免路径错误）
             relative_path = os.path.relpath(file_path, self.BASE_DIR).replace('\\', '/')
             access_url = f"/{relative_path}"
-            
-            return jsonify({
+
+            payload = {
                 "status": 200,
                 "message": "文件上传成功",
                 "data": access_url
-            })
+            }
+            return jsonify(payload)
             
         except Exception as e:
             return jsonify({"status": 500, "message": f"文件上传失败: {str(e)}"}), 500
