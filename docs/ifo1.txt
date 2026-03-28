@@ -1,3 +1,5 @@
+该文件是训练配置文件
+
 随机种子与可复现性设置（见 reproducibility.yaml/args.yaml）：
 
 seed: 42

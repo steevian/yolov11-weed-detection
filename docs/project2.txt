@@ -81,3 +81,6 @@
 5. `yolo_weed_detection_vue/src/views/Train/ModelCompare/index.vue`
 6. `docs/project1.txt`
 7. `docs/project2.txt`
+
+## 6. 2026/3/28更改
+1.原改造表现异常，已恢复占位状态
