@@ -2885,19 +2885,19 @@ class VideoProcessingApp:
         ]
 
     def get_train_tasks(self):
-        """获取训练任务列表（运行态 + 历史扫描）"""
+        """获取训练任务列表（占位模式，不触发真实训练执行）"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
                 return auth_error
 
-            tasks = self._build_placeholder_train_tasks()
+            tasks = list(self.train_placeholder_tasks)
             self._save_train_runtime_tasks()
             return jsonify({
                 'code': 0,
                 'msg': '获取训练任务成功',
                 'data': {
-                    'status': 'ready',
+                    'status': 'placeholder',
                     'tasks': tasks,
                 },
             })
@@ -2906,7 +2906,7 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'获取训练任务失败: {str(e)}', 'data': {'tasks': []}})
 
     def create_train_task(self):
-        """创建训练任务并启动真实训练子进程。"""
+        """创建训练任务（占位模式，不启动真实训练）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
@@ -2930,19 +2930,16 @@ class VideoProcessingApp:
                 'imageSize': int(data.get('imageSize', 640)),
                 'remark': data.get('remark', ''),
                 'device': str(data.get('device', '0')),
-                'source': 'manual-runtime',
+                'source': 'placeholder',
             }
-            task['launchPlan'] = self._build_train_launch_plan(task.get('modelType'), task_name, data)
-
-            self._start_train_task(task)
             self.train_placeholder_tasks.insert(0, task)
             self._save_train_runtime_tasks()
 
             return jsonify({
                 'code': 0,
-                'msg': '训练任务创建成功，已启动',
+                'msg': '训练任务创建成功（占位模式，未启动真实训练）',
                 'data': {
-                    'status': 'running',
+                    'status': 'placeholder',
                     'task': task,
                 },
             })
@@ -2951,41 +2948,22 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'创建训练任务失败: {str(e)}'})
 
     def get_train_monitor(self):
-        """获取训练监控数据（优先真实训练结果）。"""
+        """获取训练监控数据（占位模式）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
                 return auth_error
 
-            task_id = request.args.get('taskId', '')
-            run_path = self._find_run_path_by_task_id(task_id)
-            epochs = self._load_run_epochs_from_csv(run_path) if run_path else []
-
-            status = 'runs-csv' if epochs else 'running-no-metrics'
-            runtime_task = None
-            for t in self.train_placeholder_tasks:
-                if t.get('taskId') == task_id:
-                    self._refresh_runtime_task(t)
-                    runtime_task = t
-                    status = t.get('status', status)
-                    break
-
-            current_epoch = epochs[-1]['epoch'] if epochs else 0
-            total_epoch = int(runtime_task.get('epochs', current_epoch or 1)) if runtime_task else max(current_epoch, 1)
-            progress = int((current_epoch / total_epoch) * 100) if total_epoch > 0 else 0
-            progress = max(0, min(progress, 100))
-            if runtime_task and status == 'completed':
-                progress = 100
-
+            task_id = request.args.get('taskId', '') or 'placeholder-001'
             overview = {
-                'taskId': task_id or 'placeholder-001',
-                'status': status,
-                'currentEpoch': current_epoch,
-                'totalEpoch': total_epoch,
-                'progress': progress,
-                'map50': epochs[-1]['map50'] if epochs else 0.0,
-                'precision': epochs[-1]['precision'] if epochs else 0.0,
-                'recall': epochs[-1]['recall'] if epochs else 0.0,
+                'taskId': task_id,
+                'status': 'placeholder',
+                'currentEpoch': 0,
+                'totalEpoch': 100,
+                'progress': 0,
+                'map50': 0.0,
+                'precision': 0.0,
+                'recall': 0.0,
                 'updatedAt': get_now_str(),
             }
 
@@ -2993,11 +2971,11 @@ class VideoProcessingApp:
                 'code': 0,
                 'msg': '获取训练监控成功',
                 'data': {
-                    'status': status,
+                    'status': 'placeholder',
                     'overview': overview,
-                    'epochs': epochs,
-                    'runPath': run_path,
-                    'taskLog': runtime_task.get('taskLog') if runtime_task else '',
+                    'epochs': [],
+                    'runPath': '',
+                    'taskLog': '',
                 },
             })
         except Exception as e:
@@ -3005,38 +2983,22 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'获取训练监控失败: {str(e)}'})
 
     def get_train_datasets(self):
-        """获取训练数据集列表（真实目录扫描）。"""
+        """获取训练数据集列表（占位模式）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
                 return auth_error
 
-            dataset_candidates = []
-            for folder in ['datasets', 'data']:
-                folder_path = os.path.join(self.repo_root, folder)
-                if os.path.isdir(folder_path):
-                    for name in sorted(os.listdir(folder_path)):
-                        path = os.path.join(folder_path, name)
-                        if os.path.isdir(path):
-                            dataset_candidates.append({'name': name, 'path': path})
-
-            configs_dir = os.path.join(self.repo_root, 'training', 'configs')
-            if os.path.isdir(configs_dir):
-                for file_name in sorted(os.listdir(configs_dir)):
-                    if file_name.endswith('.yaml') and 'data_' in file_name:
-                        full_path = os.path.join(configs_dir, file_name)
-                        dataset_candidates.append({'name': file_name[:-5], 'path': full_path})
-
-            uniq = {}
-            for item in dataset_candidates:
-                uniq[item['name']] = item
-            dataset_candidates = list(uniq.values())
+            dataset_candidates = [
+                {'name': 'weed_dataset_v1', 'path': 'placeholder://datasets/weed_dataset_v1'},
+                {'name': 'weed_dataset_v2', 'path': 'placeholder://datasets/weed_dataset_v2'},
+            ]
 
             return jsonify({
                 'code': 0,
                 'msg': '获取数据集列表成功',
                 'data': {
-                    'status': 'ready',
+                    'status': 'placeholder',
                     'datasets': dataset_candidates,
                 },
             })
@@ -3045,83 +3007,20 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'获取数据集列表失败: {str(e)}', 'data': {'datasets': []}})
 
     def get_train_dataset_analysis(self, dataset_name):
-        """获取数据集分析结果（真实统计）。"""
+        """获取数据集分析结果（占位模式）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
                 return auth_error
 
-            data_yaml_path = self._resolve_dataset_yaml(dataset_name)
-            if not os.path.isfile(data_yaml_path):
-                return jsonify({'code': 404, 'msg': f'数据集配置不存在: {data_yaml_path}'})
-
-            if yaml is None:
-                return jsonify({'code': 500, 'msg': '缺少PyYAML依赖，无法解析数据集配置'})
-
-            with open(data_yaml_path, 'r', encoding='utf-8') as f:
-                ds = yaml.safe_load(f) or {}
-
-            names = ds.get('names') or []
-            if isinstance(names, dict):
-                names = [names[k] for k in sorted(names.keys())]
-
-            train_dir = ds.get('train')
-            val_dir = ds.get('val')
-            if train_dir and not os.path.isabs(train_dir):
-                train_dir = os.path.normpath(os.path.join(os.path.dirname(data_yaml_path), train_dir))
-            if val_dir and not os.path.isabs(val_dir):
-                val_dir = os.path.normpath(os.path.join(os.path.dirname(data_yaml_path), val_dir))
-
-            def count_images(folder):
-                if not folder or not os.path.isdir(folder):
-                    return 0
-                cnt = 0
-                for root, _, files in os.walk(folder):
-                    for fn in files:
-                        if fn.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.webp')):
-                            cnt += 1
-                return cnt
-
-            def collect_label_distribution(folder):
-                dist = {str(name): 0 for name in names}
-                if not folder or not os.path.isdir(folder):
-                    return dist
-                labels_dir = folder.replace(os.sep + 'images', os.sep + 'labels') if 'images' in folder else folder
-                if not os.path.isdir(labels_dir):
-                    return dist
-                for root, _, files in os.walk(labels_dir):
-                    for fn in files:
-                        if not fn.lower().endswith('.txt'):
-                            continue
-                        path = os.path.join(root, fn)
-                        try:
-                            with open(path, 'r', encoding='utf-8') as lf:
-                                for line in lf:
-                                    seg = line.strip().split()
-                                    if not seg:
-                                        continue
-                                    cls_idx = int(float(seg[0]))
-                                    if 0 <= cls_idx < len(names):
-                                        dist[str(names[cls_idx])] = dist.get(str(names[cls_idx]), 0) + 1
-                        except Exception:
-                            continue
-                return dist
-
-            train_images = count_images(train_dir)
-            val_images = count_images(val_dir)
-            class_dist = collect_label_distribution(train_dir)
-            val_dist = collect_label_distribution(val_dir)
-            for k, v in val_dist.items():
-                class_dist[k] = class_dist.get(k, 0) + v
-
             analysis = {
                 'datasetName': dataset_name,
-                'dataYaml': data_yaml_path,
-                'trainImages': train_images,
-                'valImages': val_images,
-                'classDistribution': class_dist,
+                'dataYaml': '',
+                'trainImages': 0,
+                'valImages': 0,
+                'classDistribution': {},
                 'imageSizes': [[640, 640]],
-                'status': 'ready',
+                'status': 'placeholder',
             }
             return jsonify({'code': 0, 'msg': '获取数据集分析成功', 'data': analysis})
         except Exception as e:
@@ -3129,7 +3028,7 @@ class VideoProcessingApp:
             return jsonify({'code': 500, 'msg': f'获取数据集分析失败: {str(e)}'})
 
     def get_train_model_compare(self):
-        """获取模型比较结果（优先真实 runs 指标）。"""
+        """获取模型比较结果（占位模式）。"""
         try:
             auth_error = self._require_train_admin()
             if auth_error:
@@ -3140,31 +3039,11 @@ class VideoProcessingApp:
                 {'modelId': 'yolo11n', 'name': 'YOLO11n'},
                 {'modelId': 'yolo11s', 'name': 'YOLO11s'},
             ]
-            for task in self._build_placeholder_train_tasks():
-                if str(task.get('taskId', '')).startswith('scan-'):
-                    model_options.append({
-                        'modelId': task['taskId'],
-                        'name': f"{task['taskName']} (runs)",
-                    })
 
             model_a = request.args.get('modelA', model_options[0]['modelId'])
             model_b = request.args.get('modelB', model_options[1]['modelId'])
 
             def model_eval(model_id):
-                run_path = self._find_run_path_by_task_id(model_id)
-                if run_path:
-                    epochs = self._load_run_epochs_from_csv(run_path)
-                    if epochs:
-                        last = epochs[-1]
-                        return {
-                            'map50': last.get('map50', 0.0),
-                            'precision': last.get('precision', 0.0),
-                            'recall': last.get('recall', 0.0),
-                            'latency': 14.0,
-                            'source': 'runs-csv',
-                        }
-
-                # 占位默认值（无历史CSV时）
                 defaults = {
                     'weed_best': {'map50': 0.912, 'precision': 0.901, 'recall': 0.865, 'latency': 14.8},
                     'yolo11n': {'map50': 0.887, 'precision': 0.872, 'recall': 0.881, 'latency': 11.6},
@@ -3177,7 +3056,7 @@ class VideoProcessingApp:
             eval_a = model_eval(model_a)
             eval_b = model_eval(model_b)
             metrics = self._build_compare_metrics(model_a, model_b, eval_a, eval_b)
-            status = 'runs-csv' if (eval_a.get('source') == 'runs-csv' or eval_b.get('source') == 'runs-csv') else 'placeholder'
+            status = 'placeholder'
 
             return jsonify({
                 'code': 0,

@@ -1,0 +1,77 @@
+随机种子与可复现性设置（见 reproducibility.yaml/args.yaml）：
+
+seed: 42
+deterministic: true
+cudnn_benchmark: false
+python_hash_seed: 42
+主要超参数（见 args.yaml）：
+
+epochs: 200
+batch: 6
+imgsz: 640
+optimizer: SGD
+lr0: 0.01
+lrf: 0.01
+momentum: 0.937
+weight_decay: 0.0005
+warmup_epochs: 3.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.1
+patience: 50
+device: '0'
+workers: 1
+框架与环境版本（见 firstmemory.md）：
+
+Python: 3.11.3
+torch: 2.9.1
+ultralytics: 8.4.7
+opencv-python: 4.13.0.90
+numpy: 2.4.1
+pillow: 12.1.0
+Flask: 3.1.2
+conda: 22.11.1
+操作系统: Windows 11 家庭中文版 10.0.26100
+显卡: NVIDIA GeForce RTX 3060 Laptop GPU
+评估参数（见 args.yaml）：
+
+iou: 0.7
+max_det: 300
+val: true
+split: val
+save_json: false
+增强策略（见 args.yaml/analysis1.txt）：
+
+颜色抖动
+hsv_h: 0.015
+hsv_s: 0.7
+hsv_v: 0.4 
+旋转
+degrees: 8.0
+平移
+translate: 0.1
+缩放
+scale: 0.2
+
+shear: 0.0
+perspective: 0.0
+上下/左右翻转
+flipud: 0.1
+fliplr: 0.5
+mosaic拼接
+mosaic: 1.0
+
+mixup: 0.0
+copy_paste: 0.0
+自动增强
+auto_augment: randaugment
+随机擦除
+erasing: 0.4
+close_mosaic: 10
+硬件环境（见 firstmemory.md）：
+
+主机型号: Redmi G 2022
+CPU: AMD Ryzen 7 6800H (8核16线程)
+内存: 16GB DDR5 4800MHz
+硬盘: 512GB SSD
+显卡: NVIDIA GeForce RTX 3060 Laptop GPU
+格式建议：如需 YAML/表格/纯文本可按上述结构直接复制粘贴。所有参数均可在 args.yaml 和 reproducibility.yaml 查证

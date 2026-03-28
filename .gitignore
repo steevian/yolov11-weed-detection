@@ -209,3 +209,35 @@ experiments/**/val_batch*.jpg
 
 # 敏感代码文件，防止误提交
 training/ultralytics_custom/ultralytics/engine/tuner.py
+
+# ========== exp1 文件夹大文件忽略规则 ==========
+exp1/**/*.pt
+exp1/**/*.pth
+exp1/**/*.onnx
+exp1/**/*.engine
+exp1/**/*.bin
+exp1/**/*.weights
+exp1/**/*.jpg
+exp1/**/*.jpeg
+exp1/**/*.png
+exp1/**/*.bmp
+exp1/**/*.webp
+exp1/**/*.mp4
+exp1/**/*.avi
+exp1/**/*.mov
+exp1/**/*.mkv
+exp1/**/*.zip
+exp1/**/*.tar
+exp1/**/*.tar.gz
+exp1/**/*.7z
+exp1/**/*.rar
+
+# 保留重要训练配置和标注文件
+!exp1/**/*.yaml
+!exp1/**/*.yml
+!exp1/**/*.json
+!exp1/**/*.csv
+!exp1/**/*.txt
+!exp1/**/*.xml
+!exp1/**/*.md
+!exp1/**/*.log

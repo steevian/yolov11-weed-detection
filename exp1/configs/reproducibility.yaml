@@ -1,0 +1,4 @@
+seed: 42
+deterministic: true
+cudnn_benchmark: false
+python_hash_seed: 42
