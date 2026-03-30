@@ -27,13 +27,15 @@ import numpy as np
 import torch
 from ultralytics import YOLO
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 try:
     from exp1.models.eca import ECA
 except Exception:
     ECA = None  # type: ignore
 
-
-REPO_ROOT = Path(__file__).resolve().parents[1]
 EXP1_ROOT = REPO_ROOT / "exp1"
 RUNS_ROOT = EXP1_ROOT / "runs"
 EVAL_ROOT = EXP1_ROOT / "eval"
