@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-03-30 13:19:38",
+  "timestamp": "2026-03-31 19:53:23",
   "model": "eca",
   "model_source": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\configs\\yolov11s_mbv3_eca.yaml",
-  "train_entry_source": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\configs\\yolov11s_mbv3_eca.yaml",
-  "use_resume": false,
-  "resume_checkpoint": null,
+  "train_entry_source": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\runs\\eca\\weights\\last.pt",
+  "use_resume": true,
+  "resume_checkpoint": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\runs\\eca\\weights\\last.pt",
   "data": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\dataset\\data.yaml",
   "fixed_seed": 42,
   "reproducibility": {
@@ -52,7 +52,8 @@
     "exist_ok": true,
     "save": true,
     "save_period": 5,
-    "verbose": true
+    "verbose": true,
+    "resume": true
   },
   "eval_args": {
     "iou": 0.7,

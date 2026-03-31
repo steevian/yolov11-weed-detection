@@ -23,6 +23,7 @@ __all__ = (
     "Index",
     "LightConv",
     "RepConv",
+    "ShuffleConv",
     "SpatialAttention",
 )
 
@@ -348,6 +349,49 @@ class GhostConv(nn.Module):
         """
         y = self.cv1(x)
         return torch.cat((y, self.cv2(y)), 1)
+
+
+class ShuffleConv(nn.Module):
+    """Lightweight shuffle convolution block.
+
+    This block first compresses channels with a pointwise convolution, then applies a cheap depthwise branch
+    and performs channel shuffle to improve feature mixing with fewer parameters than a standard convolution.
+    """
+
+    def __init__(self, c1, c2, k=1, s=1, p=None, g=1, d=1, act=True):
+        """Initialize ShuffleConv.
+
+        Args:
+            c1 (int): Number of input channels.
+            c2 (int): Number of output channels.
+            k (int): Kernel size for the depthwise branch.
+            s (int): Stride for the depthwise branch.
+            p (int, optional): Padding for the depthwise branch.
+            g (int): Unused group argument kept for YAML compatibility with Conv signature.
+            d (int): Dilation for the depthwise branch.
+            act (bool | nn.Module): Activation function.
+        """
+        super().__init__()
+        _ = g  # keep Conv-compatible signature for YAML parser
+        c_ = c2 // 2
+        self.cv1 = Conv(c1, c_, 1, s, act=act)
+        self.cv2 = Conv(c_, c_, k, 1, p, g=c_, d=d, act=act)
+
+    @staticmethod
+    def channel_shuffle(x, groups=2):
+        """Channel shuffle operation used by ShuffleNet-style blocks."""
+        b, c, h, w = x.size()
+        if c % groups != 0:
+            return x
+        x = x.view(b, groups, c // groups, h, w)
+        x = x.transpose(1, 2).contiguous()
+        return x.view(b, c, h, w)
+
+    def forward(self, x):
+        """Forward pass of ShuffleConv."""
+        y = self.cv1(x)
+        y = torch.cat((y, self.cv2(y)), 1)
+        return self.channel_shuffle(y, 2)
 
 
 class RepConv(nn.Module):
