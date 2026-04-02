@@ -1,0 +1,24 @@
+{
+  "policy": "reuse-exp1-dataset",
+  "data_yaml": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\dataset\\data.yaml",
+  "note": "中文注释：exp2 直接复用 exp1 数据集，保证对比实验口径一致。",
+  "preview": [
+    "path: D:/cyd/Desktop/yolo_web-main/exp1/dataset",
+    "train: D:/cyd/Desktop/yolo_web-main/exp1/dataset/images/train",
+    "val: D:/cyd/Desktop/yolo_web-main/exp1/dataset/images/val",
+    "test: D:/cyd/Desktop/yolo_web-main/exp1/dataset/images/test",
+    "",
+    "nc: 10",
+    "names:",
+    "  0: 'Carpetweed'",
+    "  1: 'Eclipta'",
+    "  2: 'Goosegrass'",
+    "  3: 'Lambsquarters'",
+    "  4: 'Morningglory'",
+    "  5: 'Ragweed'",
+    "  6: 'Palmer Amaranth'",
+    "  7: 'Purslane'",
+    "  8: 'Spotted spurge'",
+    "  9: 'Waterhemp'"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "model": "p2_simam",
+  "timestamp": "2026-04-02 05:45:43",
+  "weights": "D:\\cyd\\Desktop\\yolo_web-main\\exp2\\runs\\p2_simam\\weights\\best.pt",
+  "data": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\dataset\\data.yaml",
+  "metrics": {
+    "precision": 0.9525989718449597,
+    "recall": 0.8890150511475208,
+    "mAP50": 0.953734122147094,
+    "mAP50-95": 0.8760314217207259,
+    "Params(M)": 7.607384,
+    "FLOPs(G)": 2.18257856e-08,
+    "FPS": 36.83161620111159
+  },
+  "aux": {
+    "fps_from_val_speed": 26.42244337804536,
+    "fps_benchmark": 36.83161620111159,
+    "val_speed_ms": {
+      "preprocess": 1.000010310457805,
+      "inference": 37.84661341467416,
+      "loss": 0.011276777342401885,
+      "postprocess": 2.08591841775607
+    },
+    "runtime_seconds_total": 67210.39261627197,
+    "results_csv": "D:\\cyd\\Desktop\\yolo_web-main\\exp2\\runs\\p2_simam\\results.csv"
+  },
+  "fairness_contract": {
+    "train_fixed_args": {
+      "epochs": 200,
+      "batch": 6,
+      "imgsz": 640,
+      "optimizer": "SGD",
+      "lr0": 0.01,
+      "lrf": 0.01,
+      "momentum": 0.937,
+      "weight_decay": 0.0005,
+      "warmup_epochs": 3.0,
+      "warmup_momentum": 0.8,
+      "warmup_bias_lr": 0.1,
+      "patience": 50,
+      "device": "0",
+      "workers": 1,
+      "seed": 42,
+      "deterministic": true,
+      "amp": true,
+      "close_mosaic": 10,
+      "hsv_h": 0.015,
+      "hsv_s": 0.7,
+      "hsv_v": 0.4,
+      "degrees": 8.0,
+      "translate": 0.1,
+      "scale": 0.2,
+      "shear": 0.0,
+      "perspective": 0.0,
+      "flipud": 0.1,
+      "fliplr": 0.5,
+      "mosaic": 1.0,
+      "mixup": 0.0,
+      "copy_paste": 0.0,
+      "auto_augment": "randaugment",
+      "erasing": 0.4
+    },
+    "eval_fixed_args": {
+      "iou": 0.7,
+      "max_det": 300
+    },
+    "seed": 42,
+    "deterministic": true,
+    "dataset_policy": "reuse exp1 dataset and references"
+  }
+}
