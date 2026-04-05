@@ -3,7 +3,7 @@
 """exp1 unified training entry.
 
 Features:
-1) --model baseline|mbv3|eca auto-selects model yaml
+1) --model baseline|mbv3|eca|mbv3_sp4eca auto-selects model yaml
 2) Uses fixed hyperparameters for fair ablation training
 3) Supports resilient resume from last.pt
 4) Auto-evaluates best.pt on test split after training
@@ -32,8 +32,10 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 try:
+    from exp1.models.ca import CA
     from exp1.models.eca import ECA
 except Exception:
+    CA = None  # type: ignore
     ECA = None  # type: ignore
 
 EXP1_ROOT = REPO_ROOT / "exp1"
@@ -87,7 +89,7 @@ FIXED_EVAL_ARGS: dict[str, Any] = {
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="exp1 unified trainer")
-    parser.add_argument("--model", choices=["baseline", "mbv3", "eca"], required=True)
+    parser.add_argument("--model", choices=["baseline", "mbv3", "eca", "mbv3_sp4eca", "mbv3_ca"], required=True)
     parser.add_argument(
         "--data",
         type=str,
@@ -191,6 +193,14 @@ def resolve_model_source(model_name: str) -> str:
         cands = [
             exp1_cfg / "yolov11s_mbv3.yaml",
             train_cfg / "yolo11s_mbv3.yaml",
+        ]
+    elif model_name == "mbv3_ca":
+        cands = [
+            exp1_cfg / "yolov11s_mbv3_ca.yaml",
+        ]
+    elif model_name == "mbv3_sp4eca":
+        cands = [
+            exp1_cfg / "yolov11s_mbv3_sp4eca.yaml",
         ]
     else:
         cands = [
@@ -297,6 +307,15 @@ def dump_json(path: Path, payload: dict[str, Any]) -> None:
 
 def build_train_kwargs(args: argparse.Namespace, run_project: Path) -> dict[str, Any]:
     train_kwargs = dict(FIXED_TRAIN_ARGS)
+    if args.model == "mbv3_sp4eca":
+        # Single-variable control for this experiment variant.
+        train_kwargs["close_mosaic"] = 15
+        train_kwargs["cls_pw"] = 1.2
+    if args.model == "mbv3_ca":
+        # Required training deltas for MBV3+CA run: only close_mosaic and cls_pw.
+        train_kwargs["close_mosaic"] = 20
+        train_kwargs["cls_pw"] = 1.2
+
     train_kwargs["epochs"] = args.epochs
     train_kwargs["batch"] = args.batch
     train_kwargs["imgsz"] = args.imgsz
@@ -341,12 +360,38 @@ def main() -> int:
 
     model_source = resolve_model_source(args.model)
 
+    if args.model in {"mbv3_sp4eca", "mbv3_ca"}:
+        # Keep Ultralytics runtime intact while permitting cls_pw in overrides.
+        try:
+            import ultralytics.cfg as ucfg
+
+            _orig_check_dict_alignment = ucfg.check_dict_alignment
+
+            def _check_dict_alignment_allow_cls_pw(base: dict, custom: dict, e: Exception | None = None) -> None:
+                if isinstance(custom, dict) and "cls_pw" in custom:
+                    custom = dict(custom)
+                    custom.pop("cls_pw", None)
+                _orig_check_dict_alignment(base, custom, e)
+
+            ucfg.check_dict_alignment = _check_dict_alignment_allow_cls_pw
+        except Exception:
+            pass
+
     if ECA is not None:
         # Register custom module symbol for Ultralytics YAML parser.
         try:
             import ultralytics.nn.tasks as tasks
 
             setattr(tasks, "ECA", ECA)
+        except Exception:
+            pass
+
+    if CA is not None:
+        # Register custom module symbol for Ultralytics YAML parser.
+        try:
+            import ultralytics.nn.tasks as tasks
+
+            setattr(tasks, "CA", CA)
         except Exception:
             pass
 

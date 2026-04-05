@@ -48,6 +48,7 @@ def main() -> int:
 
     baseline = load_json(args.exp1_eval_dir / "baseline_test_results.json")
     mbv3 = load_json(args.exp1_eval_dir / "mbv3_test_results.json")
+    a1_p2 = load_json(args.exp2_eval_dir / "a1_p2_test_results.json")
     p2_simam = load_json(args.exp2_eval_dir / "p2_simam_test_results.json")
     p2_simam_dw = load_json(args.exp2_eval_dir / "p2_simam_dwconv_test_results.json")
     p2_simam_sh = load_json(args.exp2_eval_dir / "p2_simam_shuffle_test_results.json")
@@ -56,6 +57,7 @@ def main() -> int:
     rows = [
         ["baseline (exp1 reference)", fmt(m(baseline, "precision")), fmt(m(baseline, "recall")), fmt(m(baseline, "mAP50")), fmt(m(baseline, "mAP50-95")), fmt(m(baseline, "Params(M)"), 3), fmt(m(baseline, "FPS"), 2)],
         ["mbv3 (exp1 reference)", fmt(m(mbv3, "precision")), fmt(m(mbv3, "recall")), fmt(m(mbv3, "mAP50")), fmt(m(mbv3, "mAP50-95")), fmt(m(mbv3, "Params(M)"), 3), fmt(m(mbv3, "FPS"), 2)],
+        ["a1_p2", fmt(m(a1_p2, "precision")), fmt(m(a1_p2, "recall")), fmt(m(a1_p2, "mAP50")), fmt(m(a1_p2, "mAP50-95")), fmt(m(a1_p2, "Params(M)"), 3), fmt(m(a1_p2, "FPS"), 2)],
         ["p2_simam", fmt(m(p2_simam, "precision")), fmt(m(p2_simam, "recall")), fmt(m(p2_simam, "mAP50")), fmt(m(p2_simam, "mAP50-95")), fmt(m(p2_simam, "Params(M)"), 3), fmt(m(p2_simam, "FPS"), 2)],
         ["p2_simam_dwconv", fmt(m(p2_simam_dw, "precision")), fmt(m(p2_simam_dw, "recall")), fmt(m(p2_simam_dw, "mAP50")), fmt(m(p2_simam_dw, "mAP50-95")), fmt(m(p2_simam_dw, "Params(M)"), 3), fmt(m(p2_simam_dw, "FPS"), 2)],
         ["p2_simam_shuffle", fmt(m(p2_simam_sh, "precision")), fmt(m(p2_simam_sh, "recall")), fmt(m(p2_simam_sh, "mAP50")), fmt(m(p2_simam_sh, "mAP50-95")), fmt(m(p2_simam_sh, "Params(M)"), 3), fmt(m(p2_simam_sh, "FPS"), 2)],
@@ -65,7 +67,7 @@ def main() -> int:
     lines: list[str] = []
     lines.append("# exp2 消融实验汇总")
     lines.append("")
-    lines.append("说明：baseline 与 mbv3 为 exp1 正式训练结果复用，不在 exp2 重复训练。")
+    lines.append("说明：baseline 与 mbv3 为 exp1 正式训练结果复用，不在 exp2 重复训练。stageA 默认批跑仅包含 a1_p2、p2_simam_dwconv、p2_simam_shuffle；p2_simam_dwconv_p075ghost 作为可选极限压缩对照。")
     lines.append("")
     lines.extend(md_table(["Model", "Precision", "Recall", "mAP50", "mAP50-95", "Params(M)", "FPS"], rows))
     lines.append("")

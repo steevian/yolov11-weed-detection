@@ -81,6 +81,7 @@ FIXED_EVAL_ARGS: dict[str, Any] = {
 }
 
 MODEL_TO_CONFIG = {
+    "a1_p2": EXP2_ROOT / "configs" / "yolov11s_mbv3_p2.yaml",
     "p2_simam": EXP2_ROOT / "configs" / "yolov11s_mbv3_p2_simam.yaml",
     "p2_simam_dwconv": EXP2_ROOT / "configs" / "yolov11s_mbv3_p2_simam_dwconv.yaml",
     "p2_simam_shuffle": EXP2_ROOT / "configs" / "yolov11s_mbv3_p2_simam_shuffle.yaml",
@@ -89,11 +90,18 @@ MODEL_TO_CONFIG = {
 
 # 中文注释：支持用户使用更直观的完整命名，内部会映射到规范短名，避免重复目录与结果文件。
 MODEL_ALIASES = {
+    "mbv3_p2": "a1_p2",
+    "a1_mbv3_p2": "a1_p2",
+    "a2_mbv3_p2_dwconv": "p2_simam_dwconv",
+    "a3_mbv3_p2_shuffle": "p2_simam_shuffle",
     "mbv3_p2_simam": "p2_simam",
     "mbv3_p2_simam_dwconv": "p2_simam_dwconv",
     "mbv3_p2_simam_shuffle": "p2_simam_shuffle",
     "mbv3_p2_simam_dwconv_p075ghost": "p2_simam_dwconv_p075ghost",
 }
+
+STAGEA_MODELS = ["a1_p2", "p2_simam_dwconv", "p2_simam_shuffle"]
+LEGACY_EXTREME_MODELS = ["p2_simam_dwconv_p075ghost"]
 
 MODEL_CHOICES = list(dict.fromkeys(list(MODEL_TO_CONFIG.keys()) + list(MODEL_ALIASES.keys()) + ["baseline", "mbv3"]))
 FAIR_DATA_YAML = REPO_ROOT / "exp1" / "dataset" / "data.yaml"
@@ -242,6 +250,16 @@ def normalize_model_name(raw_model: str) -> str:
     return MODEL_ALIASES.get(raw_model, raw_model)
 
 
+def resolve_experiment_group(model_name: str) -> str:
+    if model_name in STAGEA_MODELS:
+        return "stagea_primary"
+    if model_name in LEGACY_EXTREME_MODELS:
+        return "stagea_extreme"
+    if model_name in {"baseline", "mbv3"}:
+        return "exp1_reference"
+    return "custom"
+
+
 def validate_runtime_args(args: argparse.Namespace) -> list[str]:
     errors: list[str] = []
 
@@ -346,6 +364,7 @@ def main() -> int:
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "requested_model": args.model,
         "model": model_name,
+        "experiment_group": resolve_experiment_group(model_name),
         "model_source": str(model_source.resolve()),
         "train_entry_source": yolo_source,
         "use_resume": use_resume,
@@ -413,6 +432,7 @@ def main() -> int:
             "seed": 42,
             "deterministic": True,
             "dataset_policy": "reuse exp1 dataset and references",
+            "experiment_group": resolve_experiment_group(model_name),
         },
     }
 

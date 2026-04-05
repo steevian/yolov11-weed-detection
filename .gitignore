@@ -241,3 +241,6 @@ exp1/**/*.rar
 !exp1/**/*.xml
 !exp1/**/*.md
 !exp1/**/*.log
+
+paper/
+exp2/
