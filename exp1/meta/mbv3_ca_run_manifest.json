@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-04-05 21:12:23",
+  "timestamp": "2026-04-06 23:56:57",
   "model": "mbv3_ca",
   "model_source": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\configs\\yolov11s_mbv3_ca.yaml",
   "train_entry_source": "D:\\cyd\\Desktop\\yolo_web-main\\exp1\\runs\\mbv3_ca\\weights\\last.pt",

@@ -244,3 +244,5 @@ exp1/**/*.rar
 
 paper/
 exp2/
+docs/
+.agents/
