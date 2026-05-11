@@ -1,9 +1,0 @@
-{
-  "run_id": "baseline_20260310_141013",
-  "run_dir": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S\\baseline_20260310_141013",
-  "elapsed_seconds": 5330.08,
-  "elapsed_hms": "01:28:50",
-  "status": "completed",
-  "ultralytics_save_dir": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S\\baseline_20260310_141013",
-  "results_csv": "D:\\cyd\\Desktop\\yolo_web-main\\experiments\\YOLOv11-S\\baseline_20260310_141013\\results.csv"
-}

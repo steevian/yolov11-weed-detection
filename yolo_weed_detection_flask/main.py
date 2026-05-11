@@ -68,6 +68,9 @@ REPO_ROOT = os.path.dirname(CURRENT_DIR)
 CUSTOM_ULTRALYTICS_ROOT = os.path.join(REPO_ROOT, 'training', 'ultralytics_custom')
 if os.path.isdir(CUSTOM_ULTRALYTICS_ROOT) and CUSTOM_ULTRALYTICS_ROOT not in sys.path:
     sys.path.insert(0, CUSTOM_ULTRALYTICS_ROOT)
+# 确保仓库根目录在 sys.path 中，这样本地的 exp1 等包可以被 YOLO 加载时导入
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
 
 from ultralytics import YOLO
 from flask_socketio import SocketIO, emit
